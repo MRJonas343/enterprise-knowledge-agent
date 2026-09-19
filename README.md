@@ -1,0 +1,253 @@
+# Enterprise Knowledge Agent
+
+Grounded answers over governed enterprise knowledge, built on **Microsoft Foundry**, **Foundry IQ** and **Azure AI Search**.
+
+The agent answers questions that require evidence from several documents at once, cites the source of every claim, and says so plainly when the knowledge base does not contain the answer.
+
+This is not "upload PDFs and chat with them". It is an exercise in the engineering *around* retrieval: knowledge-source architecture, ingestion, grounding, citations, agent integration, evaluation and reproducibility.
+
+---
+
+## Scope and honesty about status
+
+This repository is a portfolio project, and it is explicit about what works today and what does not.
+
+**Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, and a Foundry agent that answers with citations over MCP.
+
+**Not built yet:** the FastAPI gateway and the Next.js frontend. Until those exist the "end-to-end agent, API and UI path" that defines the MVP is incomplete. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
+
+The retrieval gate is formally accepted, with evidence, in [`docs/verification/phase-2-retrieval-acceptance.md`](docs/verification/phase-2-retrieval-acceptance.md).
+
+---
+
+## What it demonstrates
+
+| Capability | How |
+| --- | --- |
+| Agentic RAG over enterprise knowledge | Foundry IQ knowledge base with agentic retrieval, not a hand-rolled pipeline |
+| Multi-source reasoning | A question that spans architecture, a runbook and an incident report is answered from all three |
+| Citations | Every claim resolves to the originating document, with real Blob URLs |
+| Grounding | Verified with adversarial probes: the agent refuses rather than inventing |
+| Reproducible infrastructure | Terraform owns the control plane; nothing is created by hand |
+| Reproducible content | Markdown in Git is the source of truth, synchronized deterministically |
+| Keyless by design | No account keys, no API keys, no connection strings anywhere |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    MD["enterprise-knowledge/<br/>version-controlled Markdown"]
+    SYNC["sync_knowledge.py"]
+    BLOB["Azure Blob Storage<br/>container: enterprise-knowledge"]
+    KS["Foundry IQ knowledge source<br/>kind azureBlob"]
+    IDX["Generated pipeline<br/>datasource · skillset · indexer · index"]
+    KB["Foundry IQ knowledge base"]
+    AGENT["Foundry agent<br/>aurora-knowledge-agent"]
+    USER["User"]
+
+    MD --> SYNC --> BLOB --> KS --> IDX --> KB
+    USER --> AGENT
+    AGENT -->|"MCP: knowledge_base_retrieve"| KB
+    KB -->|"grounded chunks + citations"| AGENT
+```
+
+Azure resources, all in `canadacentral`:
+
+| Resource | Role |
+| --- | --- |
+| Microsoft Foundry account and project | Hosts the models and the agent |
+| `gpt-5.4-mini` deployment | The agent's reasoning model and the knowledge base query planner |
+| `text-embedding-3-large` deployment | Chunk vectorization during ingestion |
+| Azure AI Search (Basic) | Hosts the knowledge source, the knowledge base and the generated index |
+| Azure Blob Storage | The document corpus at runtime |
+| Managed identities and RBAC | Every hop authenticates with Microsoft Entra ID |
+
+### Why Foundry IQ, and what it owns
+
+Foundry IQ is the retrieval intelligence layer. It handles chunking, embedding generation, query decomposition, parallel subquery execution, semantic reranking, permission enforcement and citation extraction.
+
+The project deliberately does **not** build custom retrieval orchestration, ranking or citation plumbing. When the knowledge source is created, Foundry IQ generates the entire indexer pipeline — datasource, skillset, indexer and index — from a single declarative object.
+
+A useful consequence: **knowledge sources and knowledge bases are Azure AI Search data-plane objects, not ARM resources.** Terraform cannot manage them, which is why they are created by the scripts in `src/scripts/`. Terraform owns the control plane; the scripts own the data plane.
+
+### How a question is answered
+
+The flagship question in this repository:
+
+> Checkout latency increased after a deployment. Based on our architecture documentation, previous incidents and operational runbooks, what are the most likely causes and what should the engineering team investigate first?
+
+No single document answers it. The response required four:
+
+| Fact in the answer | Source document |
+| --- | --- |
+| Synchronous checkout to payment call, 2 second timeout, no circuit breaker | `architecture/checkout-service.md` |
+| Per-pod PgBouncer pool of 50 connections | `architecture/payment-service.md` |
+| Alert at 80% pool utilisation for 5 minutes, and the diagnostic path | `runbooks/database-latency.md` |
+| Root cause, 840 ms p95, 6% error rate, rollback from v2.31.0 to v2.30.4 | `incidents/INC-2026-002.md` |
+
+The agent produced a prioritised investigation plan with citations to all four. That is the capability this project exists to demonstrate.
+
+---
+
+## The knowledge corpus
+
+`enterprise-knowledge/` holds 13 Markdown documents (about 1 400 lines) written for a fictional SaaS company, Aurora Commerce:
+
+```text
+enterprise-knowledge/
+├── architecture/   system overview, payment, checkout, authentication services
+├── runbooks/       database latency, high CPU, Redis failure
+├── incidents/      INC-2026-001, INC-2026-002, INC-2026-003
+├── engineering/    deployment guidelines, rollback procedure
+└── security/       secrets management
+```
+
+The documents are **deliberately cross-referenced**. Facts only cohere when several are read together: the checkout service calls payment synchronously, the payment service pools 50 connections per pod, the database runbook alerts at 80%, and a specific incident traced all of it to one unindexed query.
+
+Each document carries a metadata table that the sync script copies into Blob metadata — `document_id`, `document_type`, `service`, `team`, `classification`, `last_updated` — plus a content hash used for change detection.
+
+---
+
+## Grounding, tested adversarially
+
+Retrieval working does not prove the agent refuses to invent. Four probes were run, each in a fresh conversation:
+
+| Probe | Result |
+| --- | --- |
+| A fabricated incident ID (`INC-2026-009`) | Refused, and returned the three incident IDs that do exist |
+| An undocumented attribute of an existing service (order-service connection pool) | Refused, and correctly avoided transferring the value documented for a different service |
+| A fabricated service (`fraud-detection-service`) | Refused, and reported what retrieval had actually returned |
+| A domain absent from the corpus (parental leave policy) | Refused with no invention |
+
+**Honest scope:** four passing probes are strong evidence of grounding, not proof. They do not cover every hallucination shape, and a broader adversarial and prompt-injection suite belongs to a later phase.
+
+---
+
+## Repository layout
+
+```text
+enterprise-knowledge/          Document corpus, the source of truth
+infra/terraform/               Azure control plane
+src/
+├── enterprise_knowledge_agent/  Interactive agent client (the package)
+└── scripts/                     Data-plane and operational scripts
+docs/                          Architecture, ADRs, roadmap, verification records
+```
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- An Azure subscription, with permission to create resources and role assignments
+- Terraform 1.x, the Azure CLI, and Python 3.12 with [uv](https://docs.astral.sh/uv/)
+- The `Foundry User` and `Foundry Project Manager` roles on the Foundry resource, to create agents and project connections
+
+### 1. Provision infrastructure
+
+```bash
+cd infra/terraform
+terraform init
+terraform apply
+```
+
+Creates the resource group, the Foundry account and project, both model deployments, the storage account and container, Azure AI Search, and the role assignments that make the whole path keyless.
+
+### 2. Configure
+
+```bash
+cp .env.example .env
+```
+
+Fill in the values from `terraform output`. Every variable in the file is non-secret configuration; the file itself is git-ignored.
+
+> Watch the endpoints. The knowledge base needs the bare Foundry resource endpoint (`https://<name>.services.ai.azure.com`). The OpenAI-compatible output that ends in `/openai/v1` is for chat clients only, and using it for ingestion breaks every document with 404s.
+
+### 3. Synchronize the corpus
+
+```bash
+uv run python src/scripts/sync_knowledge.py --dry-run
+uv run python src/scripts/sync_knowledge.py
+```
+
+Incremental: a document whose content hash and metadata are unchanged is skipped. Removed files leave an orphaned blob that is reported but never deleted silently.
+
+### 4. Create the knowledge source and knowledge base
+
+```bash
+uv run python src/scripts/deploy_knowledge_base.py
+```
+
+Creates both objects and waits for ingestion, reporting how many documents indexed and any per-document errors.
+
+### 5. Deploy the agent
+
+```bash
+uv run python src/scripts/deploy_agent.py
+```
+
+Creates the `RemoteTool` project connection that fronts the knowledge base MCP endpoint, then publishes an agent version whose only tool is that knowledge base. The agent name and system prompt live in `src/scripts/agent_config.yaml`.
+
+### 6. Ask it something
+
+```bash
+uv run enterprise-knowledge-agent
+```
+
+Or use the Foundry playground. Try the flagship question above, then try asking about a policy that does not exist and watch it refuse.
+
+---
+
+## Design decisions
+
+Durable choices are recorded as ADRs in [`docs/adr/`](docs/adr/):
+
+- [001](docs/adr/001-use-foundry-iq.md) — Use Foundry IQ as the primary retrieval layer
+- [002](docs/adr/002-use-blob-storage-as-primary-knowledge-source.md) — Use Blob Storage as the primary knowledge source
+- [003](docs/adr/003-use-terraform-from-day-one.md) — Use Terraform from day one
+- [004](docs/adr/004-use-fastapi-as-application-gateway.md) — Use FastAPI as the application gateway
+- [005](docs/adr/005-use-mcp-for-runtime-tools.md) — Use MCP for governed runtime tools
+- [006](docs/adr/006-add-sharepoint-only-after-mvp.md) — Add SharePoint only after MVP
+
+A few constraints learned the hard way, all recorded in the verification note:
+
+- **Agentic retrieval is regional.** It is not available in every region, and several regions cannot create new Azure AI Search services at all due to capacity. `canadacentral` was chosen after verifying both.
+- **Model availability is per region.** `gpt-5-mini` is not offered in `canadacentral` under any deployment type.
+- **Foundry IQ preview objects need the preview SDK.** The stable `azure-search-documents` release does not expose the knowledge base surface at all.
+- **The MCP tool must reference the connection's ARM ID**, not its bare name, or the agent fails with `Connection resolution failed`.
+- **The embedding model, container and network mode are immutable** once the knowledge source exists; changing them requires recreating it and re-ingesting everything.
+
+---
+
+## Roadmap
+
+| Phase | Status |
+| --- | --- |
+| 0 Foundation | Accepted |
+| 1 Infrastructure and knowledge source | Accepted |
+| 2 Retrieval MVP | **Accepted 2026-09-19** |
+| 3 Foundry agent | Deployed and answering; formal acceptance pending |
+| 4 FastAPI gateway | Not started |
+| 5 Next.js frontend | Not started — completes the MVP |
+| 6-14 | Retrieval optimization, dynamic tools, MCP, security, prompt-injection defenses, evaluations, observability, CI/CD, infrastructure hardening |
+| 15 | SharePoint as a deliberately late second knowledge source |
+
+The full sequence, dependencies and exit criteria are in [`docs/development-roadmap.md`](docs/development-roadmap.md).
+
+---
+
+## Security posture
+
+- Keyless throughout. Storage disables shared key access, Azure AI Search disables local authentication, and every component uses a managed identity with a scoped role.
+- No credentials, connection strings, tokens, subscription identifiers or local paths are committed. Terraform state and `.env` are git-ignored.
+- The corpus is synthetic. It contains no real company data, and no secrets appear even as examples.
+- Ingested content is treated as untrusted input. Prompt-injection defenses and malicious-document testing are Phase 10, and are not implemented yet.
+
+---
+
+## License
+
+Not yet determined. Until a license is added, all rights are reserved by default.
