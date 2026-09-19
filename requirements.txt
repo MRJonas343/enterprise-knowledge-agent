@@ -1,0 +1,18 @@
+# Direct dependencies. Mirrors pyproject.toml; pinned exactly for reproducible
+# installs when uv is not available.
+#
+# azure-search-documents is pinned to a preview release on purpose. The stable
+# 12.0.0 package does not expose the Foundry IQ knowledge base surface we need
+# (KnowledgeBaseRetrieveDefaults, KnowledgeRetrievalOutputMode,
+# KnowledgeRetrievalAutoReasoningEffort, retrieval_reasoning_effort). Verified
+# present in 12.1.0b2.
+
+agent-framework==1.19.0
+azure-ai-projects==2.7.0
+azure-core==1.41.0
+azure-identity==1.25.3
+azure-search-documents==12.1.0b2
+azure-storage-blob==12.30.2
+python-dotenv==1.2.3
+pyyaml==6.0.3
+requests==2.34.2

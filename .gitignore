@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Secrets and local state — never commit these
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
+crash.*.log
+
+# ---------------------------------------------------------------------------
+# Terraform
+# ---------------------------------------------------------------------------
+**/.terraform/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Tooling and editor artifacts
+# .atl is generated and contains machine-specific absolute paths.
+# ---------------------------------------------------------------------------
+.atl/
+.codegraph/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

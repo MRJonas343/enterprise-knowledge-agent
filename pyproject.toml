@@ -1,0 +1,27 @@
+[project]
+name = "enterprise-knowledge-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jonas", email = "angeljonasrosales@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "agent-framework>=1.19.0",
+    "azure-ai-projects>=2.7.0",
+    "azure-core>=1.41.0",
+    "azure-identity>=1.25.3",
+    "azure-search-documents>=12.1.0b2",
+    "azure-storage-blob>=12.30.2",
+    "python-dotenv>=1.2.3",
+    "pyyaml>=6.0.3",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+enterprise-knowledge-agent = "enterprise_knowledge_agent.run_agent:main"
+
+[build-system]
+requires = ["uv_build>=0.12.7,<0.13.0"]
+build-backend = "uv_build"
