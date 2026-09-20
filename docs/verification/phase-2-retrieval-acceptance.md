@@ -122,26 +122,53 @@ indexed=13 failed=0 skipped=0
 
 ### 2. Multi-source cited retrieval
 
-The flagship question was answered by the agent with grounding from four separate
-documents:
+The flagship question was answered by the agent with grounding drawn from several
+documents at once:
 
 > Checkout latency increased after a deployment. Based on our architecture
 > documentation, previous incidents and operational runbooks, what are the most
 > likely causes and what should the engineering team investigate first?
 
-The answer correctly combined:
-
-| Fact | Source document |
-| --- | --- |
-| Synchronous checkout to payment call, 2 second timeout, no circuit breaker | `architecture/checkout-service.md` |
-| Per-pod PgBouncer pool of 50 connections | `architecture/payment-service.md` |
-| Alert threshold of 80% pool utilisation for 5 minutes, and the `SHOW POOLS` / `pg_stat_activity` / `pg_stat_statements` diagnostic path | `runbooks/database-latency.md` |
-| Root cause of the `settlements` query without a supporting index, p95 of 840 ms, 6% error rate, rollback from v2.31.0 to v2.30.4 | `incidents/INC-2026-002.md` |
-
-Citations resolved to the original Blob URLs, for example
+The retrieval step returned five or six documents per run, and the answer cited
+between three and five of them by resolved Blob URL, for example
 `https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/checkout-service.md`.
-The execution trace shows `mcp_list_tools` against the `knowledge-base` server,
-which confirms the tool was invoked rather than answered from model memory.
+The response carries the full MCP exchange, showing a `knowledge_base_retrieve`
+call against the `knowledge-base` server followed by its result, which confirms the
+answer was built from retrieval rather than from model memory.
+
+Because agentic retrieval is not deterministic, these claims were re-tested over
+three consecutive runs and classified by whether they held every time:
+
+| Claim in the answer | Source document | Across 3 runs |
+| --- | --- | --- |
+| Synchronous call from checkout-api to payment-service, 2 second timeout, no circuit breaker | `architecture/checkout-service.md` | Stable |
+| The `settlements` query with no supporting index | `incidents/INC-2026-002.md` | Stable |
+| PgBouncer pool exhaustion, and the rollback from v2.31.0 | `incidents/INC-2026-002.md` | Stable |
+| Alert threshold of 80% pool utilisation | `runbooks/database-latency.md` | 2 of 3 |
+| `pg_stat_statements` in the diagnostic path | `runbooks/database-latency.md` | 2 of 3 |
+| p95 latency of 840 ms | `incidents/INC-2026-002.md` | 2 of 3 |
+| Error rate of 6%, and the rollback target v2.30.4 | `incidents/INC-2026-002.md` | 1 of 3 |
+
+#### Erratum, 2026-09-19
+
+An earlier revision of this record stated that the answer combined "four separate
+documents", attributed a "per-pod PgBouncer pool of 50 connections" to
+`architecture/payment-service.md`, and listed the `SHOW POOLS` and `pg_stat_activity`
+diagnostics as answer content.
+
+Re-testing does not support that wording. The pool size of 50 is documented in the
+corpus in four places (`architecture/payment-service.md`,
+`architecture/system-overview.md`, `runbooks/database-latency.md` and
+`incidents/INC-2026-002.md`), and `payment-service.md` is retrieved and cited in
+some runs, but **the agent's answer never states the number 50 in any recorded
+run**. `SHOW POOLS` and `pg_stat_activity` never appeared in an answer either, and
+the cited-document count varied between three and five rather than being fixed at
+four.
+
+The original wording described the *content of the retrieved documents* as though
+it were *content of the answer*. The gate's substance is unaffected — retrieval is
+genuinely multi-document and citations genuinely resolve to source URLs — but the
+table above is what the recorded runs actually support.
 
 ### 3. Grounding under adversarial probes
 

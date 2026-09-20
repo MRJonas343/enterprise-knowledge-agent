@@ -82,12 +82,13 @@ No single document answers it. The response required four:
 
 | Fact in the answer | Source document |
 | --- | --- |
-| Synchronous checkout to payment call, 2 second timeout, no circuit breaker | `architecture/checkout-service.md` |
-| Per-pod PgBouncer pool of 50 connections | `architecture/payment-service.md` |
-| Alert at 80% pool utilisation for 5 minutes, and the diagnostic path | `runbooks/database-latency.md` |
-| Root cause, 840 ms p95, 6% error rate, rollback from v2.31.0 to v2.30.4 | `incidents/INC-2026-002.md` |
+| Synchronous call from checkout-api to payment-service, 2 second timeout, no circuit breaker | `architecture/checkout-service.md` |
+| The `settlements` query with no supporting index, pool exhaustion, and the v2.31.0 rollback | `incidents/INC-2026-002.md` |
+| The diagnostic path, and the 80% pool utilisation alert threshold | `runbooks/database-latency.md` |
 
-The agent produced a prioritised investigation plan with citations to all four. That is the capability this project exists to demonstrate.
+The agent produced a prioritised investigation plan whose citations resolved to real Blob URLs. Across four recorded runs it cited between three and five distinct documents; the retrieval step returned five or six.
+
+**Reproducibility, stated honestly.** Agentic retrieval is not deterministic. Three claims appeared in every recorded run: the synchronous 2 second timeout, the absent circuit breaker, and the INC-2026-002 root cause. Others varied — the 80% alert threshold appeared in two of three runs, and the p95 and error-rate figures in one or two. The per-pod pool size of 50 connections is documented in the corpus, but the agent's answer never states that number, so it is not claimed here as an answer fact. The acceptance records carry the per-run detail.
 
 ---
 
