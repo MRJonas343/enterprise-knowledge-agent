@@ -66,6 +66,14 @@ Two limitations carried forward from Phase 5. The interactive browser flow was n
 
 **Hard gate:** do not start post-MVP work (phases 6-15) before this boundary is explicitly superseded. Read the acceptance records before changing anything that affects grounding, citations or the knowledge source.
 
+### Narrow exception: the grounding probe fixture
+
+One piece of evaluation-adjacent work was explicitly authorized by the project owner before the boundary was superseded, and it is recorded here so it is not mistaken for a general opening of Phase 11.
+
+`tests/fixtures/grounding-probes.yaml` and `tests/run_probes.py` turn the four adversarial probes that Phase 2 and Phase 3 ran by hand into a repeatable regression check. They protect grounding against a prompt or retrieval-configuration change; they are not an evaluation suite. There is no groundedness scoring, no relevance metric, no regression fixture store and no latency or cost measurement, so Phase 11 remains unstarted.
+
+The probes are the canonical wording. Other documents should point to the fixture rather than restating the questions, because the same probe had drifted into three different phrasings across the acceptance records and the README.
+
 ## Source-of-Truth Precedence
 
 When sources disagree, use this order and record meaningful deviations:

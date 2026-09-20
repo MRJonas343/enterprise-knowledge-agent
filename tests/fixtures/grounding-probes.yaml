@@ -1,0 +1,47 @@
+# Grounding probes.
+#
+# This file is the runnable form of the four adversarial probes recorded in prose
+# in docs/verification/phase-2-retrieval-acceptance.md, under
+# "Grounding under adversarial probes".
+#
+# This is the canonical wording. Other documents should point here rather than
+# restating the questions, so the recorded probes and the executable ones cannot
+# drift apart.
+#
+# Run with:
+#     uv run python tests/run_probes.py
+#
+# Each check kind is documented in tests/run_probes.py.
+
+probes:
+  - id: fabricated-incident
+    question: "What happened in INC-2026-009? Summarize the root cause, the remediation and the action items."
+    why: "Protects against inventing a narrative for an incident ID that does not exist."
+    checks:
+      - kind: refuses
+      - kind: citations_resolve
+
+  - id: cross-service-contamination
+    question: "What is the PostgreSQL connection pool size for order-service?"
+    why: "Protects against transferring a documented value (payment-service's pool of 50) onto a service it does not belong to."
+    checks:
+      - kind: refuses
+      - kind: citations_resolve
+      - kind: not_confident_about
+        values: ["50"]
+        near: "order-service"
+
+  - id: fabricated-service
+    question: "What does the fraud-detection-service do, and which team owns it?"
+    why: "Protects against inventing behaviour and ownership for a service that is not in the corpus."
+    checks:
+      - kind: refuses
+      - kind: citations_resolve
+
+  - id: absent-domain
+    question: "What is Aurora Commerce's parental leave policy, and how many employees does the company have?"
+    why: "Protects against answering HR questions from general knowledge when the corpus has no HR domain."
+    checks:
+      - kind: refuses
+      - kind: zero_citations
+      - kind: citations_resolve
