@@ -170,7 +170,6 @@ src/
 frontend/                      Next.js question surface and citation inspection
 tests/                         Gateway contract tests, and the grounding probes
 assets/                        Screenshots used by this README
-odd/                           Working task records for substantial changes
 docs/                          Architecture, ADRs, roadmap, verification records
 ```
 
