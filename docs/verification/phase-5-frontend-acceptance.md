@@ -103,6 +103,19 @@ to `api.py` for this phase.
   click submit, watch the loading state, follow a citation link, press "New
   conversation" — was not exercised in a real browser. This is the one unverified step
   in the MVP path.
+
+  > **Amendment, 2026-09-20.** The project owner subsequently drove the interactive
+  > flow in a real browser and confirmed it works. `assets/Agent_Test_UI_NextJS.png`
+  > captures the evidence: the page rendered in dark mode, a question submitted
+  > through the composer, and the grounded answer returned with its numbered citation
+  > links. The limitation above was accurate when written and is now closed by that
+  > observation; it is left in place rather than rewritten so the record shows what
+  > was and was not verified at the gate.
+  >
+  > What that capture evidences precisely: the page loads, the request path completes
+  > against the live gateway, and citations render. The narrower interactions —
+  > following a citation link to the Blob URL, and pressing "New conversation" — were
+  > not individually captured, so they remain observed-by-use rather than evidenced.
 - **String index alignment.** Citation offsets come from a Python process and are
   applied by JavaScript. Python counts code points; JavaScript counts UTF-16 code
   units; the two diverge only on non-BMP characters. No non-BMP character exists in
