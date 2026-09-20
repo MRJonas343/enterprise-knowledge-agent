@@ -1,9 +1,16 @@
 "use client";
 
-import { useState, useSyncExternalStore, type FormEvent } from "react";
+import {
+  createElement,
+  useState,
+  useSyncExternalStore,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 
 import { ask } from "@/lib/api";
 import { buildSegments, type Segment } from "@/lib/citations";
+import { parseMarkdownLite, type Block, type Inline } from "@/lib/markdown";
 
 type Theme = "light" | "dark";
 
@@ -32,13 +39,149 @@ function readServerTheme(): Theme {
   return "light";
 }
 
-function renderText(text: string) {
-  return text.split("\n").map((line, index) => (
-    <span key={index}>
-      {index > 0 ? <br /> : null}
-      {line}
-    </span>
-  ));
+function renderInline(inline: Inline[], keyPrefix: string): ReactNode[] {
+  return inline.map((part, index) =>
+    part.kind === "bold" ? (
+      <strong key={`${keyPrefix}-${index}`}>{part.text}</strong>
+    ) : (
+      part.text
+    ),
+  );
+}
+
+function renderHeading(block: Extract<Block, { kind: "heading" }>, key: string): ReactNode {
+  // Offset by one so an answer's `#` is never the page's own <h1>.
+  const level = Math.min(block.level + 1, 6);
+  return createElement(
+    `h${level}`,
+    { key, className: "md-heading" },
+    renderInline(block.inline, key),
+  );
+}
+
+type Pending =
+  | { kind: "paragraph"; nodes: ReactNode[] }
+  | {
+      kind: "list";
+      listKind: "bullet" | "numbered";
+      items: { marker: string | null; nodes: ReactNode[] }[];
+    }
+  | null;
+
+/**
+ * Render the citation-split segments as Markdown-flavoured blocks while keeping
+ * every citation chip inline. Text segments are parsed independently, but a
+ * citation that lands mid-sentence keeps the surrounding paragraph open so the
+ * chip stays on the same line instead of forcing a block break.
+ */
+function renderAnswerSegments(segments: Segment[]): ReactNode[] {
+  const output: ReactNode[] = [];
+  let pending: Pending = null;
+  let keySequence = 0;
+  const nextKey = () => `md-${keySequence++}`;
+
+  function flush() {
+    if (pending === null) return;
+
+    if (pending.kind === "paragraph") {
+      if (pending.nodes.length > 0) {
+        output.push(
+          <p className="md-paragraph" key={nextKey()}>
+            {pending.nodes}
+          </p>,
+        );
+      }
+    } else {
+      const items = pending.items.map((item, index) => (
+        <li key={index} value={item.marker === null ? undefined : Number(item.marker)}>
+          {item.nodes}
+        </li>
+      ));
+      output.push(
+        pending.listKind === "bullet" ? (
+          <ul className="md-list" key={nextKey()}>
+            {items}
+          </ul>
+        ) : (
+          <ol className="md-list" key={nextKey()}>
+            {items}
+          </ol>
+        ),
+      );
+    }
+
+    pending = null;
+  }
+
+  segments.forEach((segment, segmentIndex) => {
+    if (segment.kind === "citation") {
+      const chip = (
+        <sup key={`chip-${segmentIndex}`}>
+          <a className="citation" href={segment.url} target="_blank" rel="noreferrer">
+            [{segment.n}]
+          </a>
+        </sup>
+      );
+
+      if (pending?.kind === "paragraph") {
+        pending.nodes.push(chip);
+      } else if (pending?.kind === "list" && pending.items.length > 0) {
+        pending.items[pending.items.length - 1].nodes.push(chip);
+      } else {
+        output.push(chip);
+      }
+      return;
+    }
+
+    parseMarkdownLite(segment.text).forEach((block, blockIndex) => {
+      const key = `${segmentIndex}-${blockIndex}`;
+
+      switch (block.kind) {
+        case "heading":
+          flush();
+          output.push(renderHeading(block, key));
+          break;
+
+        case "bullet":
+        case "numbered": {
+          if (pending?.kind === "paragraph") {
+            flush();
+          }
+          if (pending?.kind !== "list" || pending.listKind !== block.kind) {
+            flush();
+            pending = { kind: "list", listKind: block.kind, items: [] };
+          }
+          pending.items.push({
+            marker: block.kind === "numbered" ? block.marker : null,
+            nodes: renderInline(block.inline, key),
+          });
+          break;
+        }
+
+        default:
+          if (pending?.kind === "list") {
+            flush();
+          }
+          // A later paragraph inside one segment is a distinct paragraph.
+          if (pending?.kind === "paragraph" && blockIndex > 0) {
+            flush();
+          }
+          if (pending?.kind !== "paragraph") {
+            pending = { kind: "paragraph", nodes: [] };
+          }
+          pending.nodes.push(...renderInline(block.inline, key));
+          break;
+      }
+    });
+
+    // A blank line closes the paragraph, so a following citation is not absorbed.
+    if (/\r?\n[ \t]*\r?\n[ \t]*$/.test(segment.text) && pending?.kind === "paragraph") {
+      flush();
+    }
+  });
+
+  flush();
+  return output;
 }
 
 function SunIcon() {
@@ -163,24 +306,7 @@ export default function Home() {
             return (
               <li className="turn" key={turnIndex}>
                 <p className="question">{turn.question}</p>
-                <p className="answer">
-                  {turn.segments.map((segment, segmentIndex) =>
-                    segment.kind === "text" ? (
-                      <span key={segmentIndex}>{renderText(segment.text)}</span>
-                    ) : (
-                      <sup key={segmentIndex}>
-                        <a
-                          className="citation"
-                          href={segment.url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          [{segment.n}]
-                        </a>
-                      </sup>
-                    ),
-                  )}
-                </p>
+                <div className="answer">{renderAnswerSegments(turn.segments)}</div>
                 {references.length > 0 ? (
                   <ul className="references">
                     {references.map((reference, referenceIndex) => (

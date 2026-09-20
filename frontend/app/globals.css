@@ -206,6 +206,61 @@ body {
   vertical-align: super;
 }
 
+/*
+ * Markdown-flavoured blocks produced from answer text. Sizes stay below the
+ * 24px page title, and the palette is inherited so both themes are covered.
+ */
+.answer .md-paragraph {
+  margin: 0 0 12px;
+}
+
+.answer .md-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.answer .md-heading {
+  margin: 20px 0 8px;
+  font-size: 17px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.answer h2.md-heading {
+  font-size: 18px;
+}
+
+.answer h3.md-heading {
+  font-size: 17px;
+}
+
+.answer h4.md-heading {
+  font-size: 15.5px;
+}
+
+.answer .md-heading:first-child {
+  margin-top: 0;
+}
+
+.answer .md-list {
+  margin: 0 0 12px;
+  /* Outside markers give wrapped lines a hanging indent clear of the bullet. */
+  padding-left: 1.6em;
+  list-style-position: outside;
+}
+
+.answer .md-list:last-child {
+  margin-bottom: 0;
+}
+
+.answer .md-list li {
+  margin: 4px 0;
+  padding-left: 0.15em;
+}
+
+.answer strong {
+  font-weight: 650;
+}
+
 .citation {
   display: inline-block;
   padding: 1px 5px;
