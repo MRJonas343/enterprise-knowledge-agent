@@ -41,19 +41,25 @@ load_dotenv(ROOT / ".env")
 
 app = FastAPI(title="Enterprise Knowledge Agent API")
 
-# The browser sends no cookies, so no credentials are allowed and the origin list
-# stays explicit rather than a wildcard.
+# The browser sends no cookies, so credentials stay disallowed.
+#
+# Next.js falls back to a free port when 3000 is taken, so hardcoding one origin
+# breaks the moment something else holds that port: the preflight arrives with a
+# different Origin, gets a 400, and the browser reports it as a network failure.
+# Any localhost port is accepted instead. Setting CORS_ORIGINS replaces this
+# entirely with an explicit list, which is what a deployed frontend should use.
+DEFAULT_ORIGIN_REGEX = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
+
 CORS_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get(
-        "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
-    ).split(",")
+    for origin in os.environ.get("CORS_ORIGINS", "").split(",")
     if origin.strip()
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
+    allow_origin_regex=None if CORS_ORIGINS else DEFAULT_ORIGIN_REGEX,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )

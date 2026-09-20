@@ -137,6 +137,28 @@ def test_cors_allows_the_frontend_origin():
     assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
 
 
+def test_cors_allows_the_port_next_falls_back_to():
+    # Next.js takes another port when 3000 is busy. The preflight then carries a
+    # different Origin, and a hardcoded allowlist rejects it as a 400.
+    response = _client(FakeAgent()).get(
+        "/api/health", headers={"Origin": "http://localhost:3001"}
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3001"
+
+
+def test_cors_preflight_succeeds_for_a_fallback_port():
+    response = _client(FakeAgent()).options(
+        "/api/chat",
+        headers={
+            "Origin": "http://localhost:3001",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert response.status_code == 200
+
+
 def test_cors_rejects_an_unknown_origin():
     response = _client(FakeAgent()).get(
         "/api/health", headers={"Origin": "http://not-our-frontend.example"}
