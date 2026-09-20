@@ -37,7 +37,10 @@ src/
 frontend/                      Next.js application: question surface and citation
                                inspection
 
-tests/                         Gateway contract tests (no Azure required)
+tests/                         Gateway contract tests (no Azure required) and the
+                               grounding probes (live Azure)
+
+assets/                        Screenshots referenced by the README
 
 docs/                          Project documentation, ADRs, architecture and diagram rules
 ```

@@ -71,6 +71,10 @@ Azure resources, all in `canadacentral`:
 
 The FastAPI gateway and the Next.js frontend run locally for now. The three components before them are deployed Azure resources.
 
+The same path as an image:
+
+![Runtime architecture](assets/enterprise-knowledge-agent-runtime.webp)
+
 ### Why Foundry IQ, and what it owns
 
 Foundry IQ is the retrieval intelligence layer. It handles chunking, embedding generation, query decomposition, parallel subquery execution, semantic reranking, permission enforcement and citation extraction.
@@ -94,6 +98,10 @@ No single document answers it. The response required four:
 | The diagnostic path, and the 80% pool utilisation alert threshold | `runbooks/database-latency.md` |
 
 The agent produced a prioritised investigation plan whose citations resolved to real Blob URLs. Across four recorded runs it cited between three and five distinct documents; the retrieval step returned five or six.
+
+Here is that answer in the Foundry playground. The numbered markers are the citations, the first one is expanded to the Blob URL it resolves to, and the bar underneath records the run: `mcp_list_tools` against the `knowledge-base` server, 6 seconds, 6 769 tokens.
+
+![The agent answering the flagship question, with mcp_list_tools against the knowledge-base server](assets/Portal-Agent-Test_Retrieval.png)
 
 **Reproducibility, stated honestly.** Agentic retrieval is not deterministic. Three claims appeared in every recorded run: the synchronous 2 second timeout, the absent circuit breaker, and the INC-2026-002 root cause. Others varied — the 80% alert threshold appeared in two of three runs, and the p95 and error-rate figures in one or two. The per-pod pool size of 50 connections is documented in the corpus, but the agent's answer never states that number, so it is not claimed here as an answer fact. The acceptance records carry the per-run detail.
 
@@ -142,7 +150,8 @@ src/
 ├── enterprise_knowledge_agent/  Agent client and the FastAPI gateway (the package)
 └── scripts/                     Data-plane and operational scripts
 frontend/                      Next.js question surface and citation inspection
-tests/                         Gateway contract tests (no Azure required)
+tests/                         Gateway contract tests, and the grounding probes
+assets/                        Screenshots used by this README
 docs/                          Architecture, ADRs, roadmap, verification records
 ```
 
