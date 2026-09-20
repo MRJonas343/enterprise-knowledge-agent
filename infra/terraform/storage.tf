@@ -40,3 +40,13 @@ resource "azurerm_role_assignment" "search_blob_reader" {
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = azurerm_search_service.main.identity[0].principal_id
 }
+
+# Lets the gateway mint short-lived user-delegation SAS links so a citation can
+# be opened. The account is keyless, so there is no account key to sign a service
+# SAS with; a user-delegation key is the only route, and generating one requires
+# this role rather than data-plane read access.
+resource "azurerm_role_assignment" "gateway_blob_delegator" {
+  scope                = azurerm_storage_account.knowledge.id
+  role_definition_name = "Storage Blob Delegator"
+  principal_id         = local.user_principal_id
+}
