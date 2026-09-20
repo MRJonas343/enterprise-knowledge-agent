@@ -282,6 +282,8 @@ npm run dev
 
 Open `http://localhost:3000` and ask a question. Answers render with numbered citation links, and every number is listed underneath with its source document, so the grounding can actually be inspected rather than taken on faith.
 
+![The frontend answering the flagship question in dark mode, with numbered citation links](assets/Agent_Test_UI_NextJS.png)
+
 The gateway allows `http://localhost:3000` and `http://127.0.0.1:3000` by default. Override with `CORS_ORIGINS` if you serve the frontend elsewhere. The frontend points at `http://127.0.0.1:8000` unless `NEXT_PUBLIC_API_BASE_URL` says otherwise, so no environment file is needed for local development.
 
 Run the frontend checks with `npm run test`, `npm run lint` and `npm run build`.
