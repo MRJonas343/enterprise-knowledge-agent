@@ -18,6 +18,9 @@ from enterprise_knowledge_agent import api
 
 MARKER = "【5:1†source】"
 
+ALICE = "tok_alice"
+BOB = "tok_bob"
+
 
 class FakeAgent:
     def __init__(self, *, answer: str = "ok", spans: list[tuple[str, str | None, int, int]] | None = None, error: Exception | None = None):
@@ -51,16 +54,22 @@ class FakeAgent:
 
 
 @pytest.fixture(autouse=True)
-def _isolate():
+def _isolate(monkeypatch):
+    # The token map and the rate-limit settings are read per request, so setting
+    # them here is enough; monkeypatch restores the real environment afterwards.
+    monkeypatch.setenv("API_TOKENS", f"alice:{ALICE},bob:{BOB}")
     api.SESSIONS.clear()
+    api._RATE_WINDOWS.clear()
     yield
     api.SESSIONS.clear()
+    api._RATE_WINDOWS.clear()
     api.app.dependency_overrides.clear()
 
 
-def _client(fake: FakeAgent) -> TestClient:
+def _client(fake: FakeAgent, token: str | None = ALICE) -> TestClient:
     api.app.dependency_overrides[api.get_agent] = lambda: fake
-    return TestClient(api.app)
+    headers = {"Authorization": f"Bearer {token}"} if token is not None else {}
+    return TestClient(api.app, headers=headers)
 
 
 def test_health(monkeypatch):
@@ -165,3 +174,156 @@ def test_cors_rejects_an_unknown_origin():
     )
     assert response.status_code == 200
     assert "access-control-allow-origin" not in response.headers
+
+
+def test_cors_preflight_allows_the_authorization_header():
+    # The browser preflights a cross-origin request carrying the bearer token;
+    # if the header is not allowed here the browser never sends the request.
+    response = _client(FakeAgent()).options(
+        "/api/chat",
+        headers={
+            "Origin": "http://localhost:3000",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "authorization,content-type",
+        },
+    )
+    assert response.status_code == 200
+    assert "authorization" in response.headers["access-control-allow-headers"].lower()
+
+
+# --- Authentication ---------------------------------------------------------
+
+
+def test_missing_authorization_header_is_401():
+    response = _client(FakeAgent(), token=None).post("/api/chat", json={"message": "hi"})
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_malformed_authorization_scheme_is_401():
+    response = _client(FakeAgent()).post(
+        "/api/chat", json={"message": "hi"}, headers={"Authorization": "Basic xyz"}
+    )
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_unknown_token_is_401():
+    response = _client(FakeAgent(), token="tok_not_issued").post(
+        "/api/chat", json={"message": "hi"}
+    )
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
+
+
+def test_valid_token_is_200():
+    response = _client(FakeAgent()).post("/api/chat", json={"message": "hi"})
+    assert response.status_code == 200
+
+
+def test_unconfigured_tokens_fail_closed_with_503(monkeypatch):
+    # The most important behaviour: a missing configuration must never fall
+    # through to serving the request.
+    monkeypatch.delenv("API_TOKENS", raising=False)
+    response = _client(FakeAgent()).post("/api/chat", json={"message": "hi"})
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Authentication is not configured."}
+
+
+def test_empty_tokens_fail_closed_with_503(monkeypatch):
+    monkeypatch.setenv("API_TOKENS", "   ")
+    response = _client(FakeAgent()).post("/api/chat", json={"message": "hi"})
+    assert response.status_code == 503
+
+
+def test_malformed_token_entries_are_skipped(monkeypatch):
+    monkeypatch.setenv("API_TOKENS", "alice:tok_alice,not-a-pair,bob:tok_bob,:")
+
+    assert _client(FakeAgent(), token=ALICE).post("/api/chat", json={"message": "hi"}).status_code == 200
+    assert _client(FakeAgent(), token=BOB).post("/api/chat", json={"message": "hi"}).status_code == 200
+    assert _client(FakeAgent(), token="not-a-pair").post("/api/chat", json={"message": "hi"}).status_code == 401
+
+
+# --- Conversation ownership -------------------------------------------------
+
+
+def test_conversation_owned_by_another_caller_is_404():
+    fake = FakeAgent()
+    alice = _client(fake, token=ALICE)
+    bob = _client(fake, token=BOB)
+
+    created = alice.post("/api/chat", json={"message": "one"})
+    assert created.status_code == 200
+    conversation_id = created.json()["conversation_id"]
+
+    response = bob.post("/api/chat", json={"message": "two", "conversation_id": conversation_id})
+
+    assert response.status_code == 404
+    # The refusal must not disclose the conversation or its contents.
+    assert conversation_id not in response.text
+    assert "answer" not in response.text
+    assert fake.created == 1
+
+
+def test_caller_can_continue_their_own_conversation():
+    fake = FakeAgent()
+    alice = _client(fake, token=ALICE)
+
+    created = alice.post("/api/chat", json={"message": "one"})
+    conversation_id = created.json()["conversation_id"]
+
+    second = alice.post("/api/chat", json={"message": "two", "conversation_id": conversation_id})
+
+    assert second.status_code == 200
+    assert second.json()["conversation_id"] == conversation_id
+
+
+# --- Rate limiting ----------------------------------------------------------
+
+
+def test_exceeding_the_rate_limit_is_429_with_retry_after(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_REQUESTS", "1")
+    monkeypatch.setenv("RATE_LIMIT_WINDOW_SECONDS", "60")
+    client = _client(FakeAgent())
+
+    assert client.post("/api/chat", json={"message": "one"}).status_code == 200
+    second = client.post("/api/chat", json={"message": "two"})
+
+    assert second.status_code == 429
+    assert int(second.headers["retry-after"]) >= 1
+
+
+def test_rate_limit_is_per_caller(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_REQUESTS", "1")
+    monkeypatch.setenv("RATE_LIMIT_WINDOW_SECONDS", "60")
+    fake = FakeAgent()
+    alice = _client(fake, token=ALICE)
+    bob = _client(fake, token=BOB)
+
+    assert alice.post("/api/chat", json={"message": "one"}).status_code == 200
+    assert alice.post("/api/chat", json={"message": "two"}).status_code == 429
+    # A different caller has their own window.
+    assert bob.post("/api/chat", json={"message": "three"}).status_code == 200
+
+
+def test_expired_rate_window_is_pruned(monkeypatch):
+    monkeypatch.setenv("RATE_LIMIT_REQUESTS", "5")
+    monkeypatch.setenv("RATE_LIMIT_WINDOW_SECONDS", "0")
+    alice = _client(FakeAgent(), token=ALICE)
+    bob = _client(FakeAgent(), token=BOB)
+
+    assert alice.post("/api/chat", json={"message": "one"}).status_code == 200
+    assert bob.post("/api/chat", json={"message": "two"}).status_code == 200
+    assert alice.post("/api/chat", json={"message": "three"}).status_code == 200
+
+    # A zero-length window closes immediately, so each request drops the closed
+    # windows instead of accumulating one entry per caller forever.
+    assert list(api._RATE_WINDOWS) == ["alice"]
+
+
+# --- Request size -----------------------------------------------------------
+
+
+def test_message_over_two_thousand_characters_is_422():
+    response = _client(FakeAgent()).post("/api/chat", json={"message": "x" * 2001})
+    assert response.status_code == 422

@@ -42,6 +42,9 @@ tests/                         Gateway contract tests (no Azure required) and th
 
 assets/                        Screenshots referenced by the README
 
+odd/                           Working task records for substantial changes:
+                               objective, scope, tasks and checks for a slice
+
 docs/                          Project documentation, ADRs, architecture and diagram rules
 ```
 

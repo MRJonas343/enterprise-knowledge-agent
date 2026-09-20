@@ -12,6 +12,14 @@ const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"
 ).replace(/\/+$/, "");
 
+// Honest limitation: NEXT_PUBLIC_* values are inlined into the browser bundle
+// at build time, so this token is readable by anyone who loads the page. It
+// authenticates the gateway against anonymous callers; it is NOT a secret from
+// a frontend user. The correct fix is a Next.js route handler that proxies to
+// the gateway server-side and holds the token where the browser cannot see it.
+// That is deliberately out of scope for this slice.
+const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+
 export async function ask(
   message: string,
   conversationId?: string,
@@ -21,11 +29,16 @@ export async function ask(
     body.conversation_id = conversationId;
   }
 
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_TOKEN) {
+    headers.Authorization = `Bearer ${API_TOKEN}`;
+  }
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
     });
   } catch {
