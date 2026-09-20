@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent and the API gateway are implemented, and the Phase 2, 3 and 4 gates are recorded in [`verification/`](verification/).
+This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent, the API gateway and the Next.js frontend are implemented, and the Phase 2, 3, 4 and 5 gates are recorded in [`verification/`](verification/).
 
 ## Quick Path
 
@@ -24,9 +24,11 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 | Phase 2 Retrieval | **Accepted 2026-09-19** |
 | Phase 3 Foundry agent | **Accepted 2026-09-19** |
 | Phase 4 FastAPI gateway | **Accepted 2026-09-19** |
-| Phase 5 Next.js frontend | Not started; completes the MVP |
+| Phase 5 Next.js frontend | **Accepted 2026-09-19** |
 
-The MVP completes when the end-to-end agent, API and UI path works, so Phase 5 remains. Evaluations, observability, security hardening, prompt-injection defenses and SharePoint stay in later phases.
+The end-to-end agent, API and UI path works, so the roadmap's MVP (phases 3-5) is complete. Evaluations, observability, security hardening, prompt-injection defenses and SharePoint stay in later phases.
+
+The **MVP milestone is deliberately not claimed yet.** The roadmap defines the MVP as phases 3-5, but the MVP gate row in [`../AGENTS.md`](../AGENTS.md) also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8-12. Until that wording is reconciled, the honest statement is that the end-to-end path is complete and the operational evidence is not.
 
 Read the recorded evidence in [`verification/`](verification/).
 
@@ -47,7 +49,7 @@ Read the recorded evidence in [`verification/`](verification/).
 | `project-context.md` | Durable product brief | Product intent and target context |
 | `architecture/README.md` | Target and MVP data path | Target architecture; implementation is future work |
 | `adr/` | Durable decisions and assumptions | Initial decisions documented |
-| `verification/` | Dated gate acceptance records | Phases 2, 3 and 4 accepted 2026-09-19 |
+| `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19 |
 | `diagrams/` | Diagram evidence and ownership rules | Index only |
 
 ## Contribution Rule

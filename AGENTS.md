@@ -1,6 +1,6 @@
 # Enterprise Knowledge Agent: Agent Contract
 
-This repository builds an Enterprise Knowledge Agent: grounded enterprise answers over governed knowledge, using Microsoft Foundry, Foundry IQ and Azure services. **Phases 0-4 are accepted: the infrastructure, the knowledge corpus, the synchronization path, cited retrieval, the Foundry agent and the FastAPI gateway all work end to end. The acceptance records are in [`docs/verification/`](docs/verification/). The active boundary is the last MVP phase: the Next.js frontend.**
+This repository builds an Enterprise Knowledge Agent: grounded enterprise answers over governed knowledge, using Microsoft Foundry, Foundry IQ and Azure services. **Phases 0-5 are accepted: the infrastructure, the knowledge corpus, the synchronization path, cited retrieval, the Foundry agent, the FastAPI gateway and the Next.js frontend work end to end. The acceptance records are in [`docs/verification/`](docs/verification/). The MVP path is complete; the MVP milestone itself is not claimed until the gate wording is reconciled.**
 
 ## Quick Path
 
@@ -29,9 +29,15 @@ infra/terraform/               Azure infrastructure (azurerm, canadacentral)
 └── outputs.tf                 Values consumed by the Python scripts
 
 src/
-├── enterprise_knowledge_agent/  Python package (uv, src layout)
+├── enterprise_knowledge_agent/  Python package (uv, src layout): the agent client
+│                                and the FastAPI gateway
 └── scripts/                     Operational scripts: knowledge sync, knowledge source
                                  and knowledge base creation
+
+frontend/                      Next.js application: question surface and citation
+                               inspection
+
+tests/                         Gateway contract tests (no Azure required)
 
 docs/                          Project documentation, ADRs, architecture and diagram rules
 ```
@@ -42,18 +48,20 @@ Structure rules that must not drift:
 - The Git corpus is the source of truth. Documents are never edited directly in Azure.
 - Terraform owns control-plane resources only. Knowledge sources and knowledge bases are Azure AI Search data-plane objects and are created by the scripts in `src/scripts/`, never by Terraform or azapi.
 
-## Current Boundary: Phase 5, the Last MVP Phase
+## Current Boundary: MVP Path Complete, Post-MVP Not Started
 
-Phases 0 to 4 are accepted. The Phase 2, 3 and 4 gates were all cleared on 2026-09-19; the evidence is in [`docs/verification/`](docs/verification/).
+Phases 0 to 5 are accepted. All five gates were cleared on 2026-09-19; the evidence is in [`docs/verification/`](docs/verification/).
 
-The active boundary is the final MVP phase:
+The end-to-end path works and was verified with a live request carrying a browser origin:
 
 - Phase 4: FastAPI application gateway. Accepted 2026-09-19.
-- Phase 5: Next.js frontend. Not started. This completes the MVP.
+- Phase 5: Next.js frontend in `frontend/`. Accepted 2026-09-19.
 
-Two inputs carry forward from the Phase 4 record. CORS must be configured for a browser origin, because the gateway currently serves no browser. And the client must render citations from the span data — each citation gives a source URL plus `start_index`/`end_index` into the answer text — rather than trying to interpret `【N:M†source】` markers itself.
+**The MVP milestone is not claimed.** The roadmap defines the MVP as phases 3-5, but the MVP gate row below also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8-12. Reconcile that wording before anyone claims the milestone. The honest statement today is that the end-to-end path is complete and the operational evidence is not.
 
-**Hard gate:** evaluations, observability implementation, security hardening, prompt-injection defenses, SharePoint and other post-MVP work stay behind the MVP gate. Do not start them while Phase 5 is open. Read the acceptance records before changing anything that affects grounding, citations or the knowledge source.
+Two limitations carried forward from Phase 5. The interactive browser flow was never driven in a real browser — requests were made from the frontend's own modules against a live gateway, which is close but not the same. And citation offsets are produced by a Python process and applied by JavaScript, so they would misalign if a non-BMP character ever entered an answer.
+
+**Hard gate:** do not start post-MVP work (phases 6-15) before this boundary is explicitly superseded. Read the acceptance records before changing anything that affects grounding, citations or the knowledge source.
 
 ## Source-of-Truth Precedence
 
@@ -76,7 +84,8 @@ Preview or evolving Foundry IQ and Foundry APIs require a dated documentation ch
 | Phase 2 retrieval acceptance | Version-controlled Markdown is synchronized to Blob Storage; a Blob-backed Foundry IQ Knowledge Base returns a successful answer with citations; assumptions and versions are recorded. **Met 2026-09-19**: see [`docs/verification/phase-2-retrieval-acceptance.md`](docs/verification/phase-2-retrieval-acceptance.md) | Satisfied |
 | Phase 3 agent acceptance | Agent behaviour is verified against the accepted retrieval path, with service/API versions, citation preservation and failure behaviour documented. **Met 2026-09-19**: see [`docs/verification/phase-3-agent-acceptance.md`](docs/verification/phase-3-agent-acceptance.md) | Satisfied |
 | Phase 4 API acceptance | The gateway contract and integration checks cover successful grounded answers, missing context, service failure and citation preservation. **Met 2026-09-19**: see [`docs/verification/phase-4-api-acceptance.md`](docs/verification/phase-4-api-acceptance.md) | Satisfied |
-| MVP gate | End-to-end agent/API/UI path, MCP/tool policy, observability, evaluation evidence, and security acceptance are complete per the roadmap | Post-MVP expansion |
+| Phase 5 frontend acceptance | A user can submit a question and inspect grounded citations through the API; the complete agent/API/UI path works without exposing secrets. **Met 2026-09-19**: see [`docs/verification/phase-5-frontend-acceptance.md`](docs/verification/phase-5-frontend-acceptance.md) | Satisfied |
+| MVP gate | End-to-end agent/API/UI path, MCP/tool policy, observability, evaluation evidence, and security acceptance are complete per the roadmap | Post-MVP expansion; **wording needs reconciling with the roadmap's phases 3-5 definition** |
 
 Each gate needs a dated verification note or linked change record. A plan, mock, or unverified preview response is not acceptance evidence.
 
@@ -85,7 +94,7 @@ Each gate needs a dated verification note or linked change record. A plan, mock,
 - Foundry IQ is the primary retrieval intelligence layer for the MVP. Do not build custom retrieval orchestration, ranking, chunking, or citation plumbing around it unless an accepted ADR documents a verified gap.
 - Blob Storage is the primary Phase 2 knowledge source. Markdown is version-controlled locally and synchronized reproducibly; it is not edited ad hoc in Azure.
 - Terraform is the infrastructure source of truth from day one. Do not create unmanaged Azure resources to make a test pass.
-- Foundry IQ retrieval, Blob Storage, Foundry Agent Service and the FastAPI gateway are implemented. The Next.js frontend is the remaining MVP target. Operational MCP tools, OpenTelemetry, evaluations, security hardening and SharePoint are later boundaries described in the roadmap.
+- Foundry IQ retrieval, Blob Storage, Foundry Agent Service, the FastAPI gateway and the Next.js frontend are all implemented. Operational MCP tools, OpenTelemetry, evaluations, security hardening and SharePoint are later boundaries described in the roadmap.
 - Any diagram must distinguish implemented, verified, preview, and planned components.
 
 ## Engineering Rules
@@ -144,4 +153,4 @@ Each gate needs a dated verification note or linked change record. A plan, mock,
 
 ## Initial Handoff
 
-Current status: Phases 0-4 accepted on 2026-09-19. The next owner should build the Next.js frontend (Phase 5) to reach the MVP gate. Everything the API needs already exists: `enterprise-knowledge/` is the source corpus, `infra/terraform/` owns the Azure control plane, `src/scripts/` owns the data-plane objects, and `src/enterprise_knowledge_agent/api.py` serves `POST /api/chat` and `GET /api/health`. The Phase 4 acceptance record carries two inputs for Phase 5: CORS must be configured for a browser origin, and the client must render citations from the span data rather than interpreting `【N:M†source】` markers itself. Evaluations, observability, security hardening and SharePoint remain behind the MVP gate.
+Current status: Phases 0-5 accepted on 2026-09-19. The end-to-end MVP path works and the acceptance records are in [`docs/verification/`](docs/verification/). Everything needed is in place: `enterprise-knowledge/` is the source corpus, `infra/terraform/` owns the Azure control plane, `src/scripts/` owns the data-plane objects, `src/enterprise_knowledge_agent/api.py` serves `POST /api/chat` and `GET /api/health`, and `frontend/` renders answers with citations resolved from span data. Post-MVP work (phases 6-15) should not begin until the MVP gate wording is reconciled and the current boundary is explicitly superseded. Two caveats to carry forward: the interactive browser flow was never driven in a real browser, and citation offsets would misalign if a non-BMP character entered an answer.

@@ -12,11 +12,11 @@ This is not "upload PDFs and chat with them". It is an exercise in the engineeri
 
 This repository is a portfolio project, and it is explicit about what works today and what does not.
 
-**Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, a Foundry agent that answers with citations over MCP, and a FastAPI gateway that exposes it with citations resolved as structured data.
+**Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, a Foundry agent that answers with citations over MCP, a FastAPI gateway that exposes it with citations resolved as structured data, and a Next.js frontend that renders those citations as source links.
 
-**Not built yet:** the Next.js frontend. Until it exists the "end-to-end agent, API and UI path" that defines the MVP is incomplete. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
+**Not claimed:** the MVP milestone itself. The roadmap defines the MVP as phases 3-5, and all three are accepted. But the repository's own gate row also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8 to 12. So the honest statement is that the end-to-end path is complete and the operational evidence is not. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
 
-The retrieval, agent and API gates are formally accepted, with evidence, in [`docs/verification/`](docs/verification/).
+All five gates are formally accepted, with evidence, in [`docs/verification/`](docs/verification/).
 
 ---
 
@@ -46,10 +46,10 @@ flowchart TD
     KB["Foundry IQ knowledge base"]
     AGENT["Foundry agent<br/>aurora-knowledge-agent"]
     API["FastAPI gateway<br/>POST /api/chat"]
-    USER["Client"]
+    FRONT["Next.js frontend<br/>citation inspection"]
 
     MD --> SYNC --> BLOB --> KS --> IDX --> KB
-    USER --> API
+    FRONT --> API
     API -->|"conversation_id + message"| AGENT
     AGENT -->|"MCP: knowledge_base_retrieve"| KB
     KB -->|"grounded chunks + citations"| AGENT
@@ -67,7 +67,7 @@ Azure resources, all in `canadacentral`:
 | Azure Blob Storage | The document corpus at runtime |
 | Managed identities and RBAC | Every hop authenticates with Microsoft Entra ID |
 
-The FastAPI gateway runs locally for now. The three components before it are deployed Azure resources.
+The FastAPI gateway and the Next.js frontend run locally for now. The three components before them are deployed Azure resources.
 
 ### Why Foundry IQ, and what it owns
 
@@ -137,8 +137,10 @@ Retrieval working does not prove the agent refuses to invent. Four probes were r
 enterprise-knowledge/          Document corpus, the source of truth
 infra/terraform/               Azure control plane
 src/
-├── enterprise_knowledge_agent/  Interactive agent client (the package)
+├── enterprise_knowledge_agent/  Agent client and the FastAPI gateway (the package)
 └── scripts/                     Data-plane and operational scripts
+frontend/                      Next.js question surface and citation inspection
+tests/                         Gateway contract tests (no Azure required)
 docs/                          Architecture, ADRs, roadmap, verification records
 ```
 
@@ -221,6 +223,22 @@ curl -X POST http://127.0.0.1:8000/api/chat \
 
 The response carries the answer, a `conversation_id`, and a `citations` array. Send the `conversation_id` back with your next message to continue the conversation. Each citation gives a source URL plus `start_index` and `end_index`, so the client slices the answer text at those offsets and replaces the `【N:M†source】` marker with a link.
 
+### 8. Run the frontend
+
+With the gateway from step 7 still running:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000` and ask a question. Answers render with numbered citation links, and every number is listed underneath with its source document, so the grounding can actually be inspected rather than taken on faith.
+
+The gateway allows `http://localhost:3000` and `http://127.0.0.1:3000` by default. Override with `CORS_ORIGINS` if you serve the frontend elsewhere. The frontend points at `http://127.0.0.1:8000` unless `NEXT_PUBLIC_API_BASE_URL` says otherwise, so no environment file is needed for local development.
+
+Run the frontend checks with `npm run test`, `npm run lint` and `npm run build`.
+
 ---
 
 ## Design decisions
@@ -253,7 +271,7 @@ A few constraints learned the hard way, all recorded in the verification note:
 | 2 Retrieval MVP | **Accepted 2026-09-19** |
 | 3 Foundry agent | **Accepted 2026-09-19** |
 | 4 FastAPI gateway | **Accepted 2026-09-19** |
-| 5 Next.js frontend | Not started — completes the MVP |
+| 5 Next.js frontend | **Accepted 2026-09-19** — completes the roadmap's MVP |
 | 6-14 | Retrieval optimization, dynamic tools, MCP, security, prompt-injection defenses, evaluations, observability, CI/CD, infrastructure hardening |
 | 15 | SharePoint as a deliberately late second knowledge source |
 
