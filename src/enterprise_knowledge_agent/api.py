@@ -29,6 +29,7 @@ from agent_framework.foundry import FoundryAgent
 from azure.identity import DefaultAzureCredential
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 logging.getLogger("agent_framework").setLevel(logging.ERROR)
@@ -39,6 +40,23 @@ AGENT_CONFIG = ROOT / "src" / "scripts" / "agent_config.yaml"
 load_dotenv(ROOT / ".env")
 
 app = FastAPI(title="Enterprise Knowledge Agent API")
+
+# The browser sends no cookies, so no credentials are allowed and the origin list
+# stays explicit rather than a wildcard.
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 # In-memory store: conversations are lost when the process restarts.
 SESSIONS: dict[str, dict[str, Any]] = {}

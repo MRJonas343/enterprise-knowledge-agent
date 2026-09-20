@@ -127,3 +127,19 @@ def test_conversation_reuse_and_new_conversation():
     assert third.status_code == 200
     assert third.json()["conversation_id"] != conversation_id
     assert fake.created == 2
+
+
+def test_cors_allows_the_frontend_origin():
+    response = _client(FakeAgent()).get(
+        "/api/health", headers={"Origin": "http://localhost:3000"}
+    )
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_cors_rejects_an_unknown_origin():
+    response = _client(FakeAgent()).get(
+        "/api/health", headers={"Origin": "http://not-our-frontend.example"}
+    )
+    assert response.status_code == 200
+    assert "access-control-allow-origin" not in response.headers
