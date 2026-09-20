@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory is the working map for the Enterprise Knowledge Agent. Phase 1 infrastructure, the knowledge corpus, the retrieval path and the Foundry agent are implemented, and both the Phase 2 retrieval gate and the Phase 3 agent gate are recorded in [`verification/`](verification/).
+This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent and the API gateway are implemented, and the Phase 2, 3 and 4 gates are recorded in [`verification/`](verification/).
 
 ## Quick Path
 
@@ -23,11 +23,12 @@ This directory is the working map for the Enterprise Knowledge Agent. Phase 1 in
 | Phase 1 Infrastructure + knowledge source | Accepted |
 | Phase 2 Retrieval | **Accepted 2026-09-19** |
 | Phase 3 Foundry agent | **Accepted 2026-09-19** |
-| Phases 4-5 FastAPI and Next.js | Not started |
+| Phase 4 FastAPI gateway | **Accepted 2026-09-19** |
+| Phase 5 Next.js frontend | Not started; completes the MVP |
 
-The MVP completes when the end-to-end agent, API and UI path works, so Phases 4 and 5 remain. Evaluations, observability, security hardening, prompt-injection defenses and SharePoint stay in later phases.
+The MVP completes when the end-to-end agent, API and UI path works, so Phase 5 remains. Evaluations, observability, security hardening, prompt-injection defenses and SharePoint stay in later phases.
 
-Read the recorded evidence in [`verification/phase-2-retrieval-acceptance.md`](verification/phase-2-retrieval-acceptance.md) and [`verification/phase-3-agent-acceptance.md`](verification/phase-3-agent-acceptance.md).
+Read the recorded evidence in [`verification/`](verification/).
 
 ## Reading Order
 
@@ -46,7 +47,7 @@ Read the recorded evidence in [`verification/phase-2-retrieval-acceptance.md`](v
 | `project-context.md` | Durable product brief | Product intent and target context |
 | `architecture/README.md` | Target and MVP data path | Target architecture; implementation is future work |
 | `adr/` | Durable decisions and assumptions | Initial decisions documented |
-| `verification/` | Dated gate acceptance records | Phases 2 and 3 accepted 2026-09-19 |
+| `verification/` | Dated gate acceptance records | Phases 2, 3 and 4 accepted 2026-09-19 |
 | `diagrams/` | Diagram evidence and ownership rules | Index only |
 
 ## Contribution Rule

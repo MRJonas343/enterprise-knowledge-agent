@@ -12,11 +12,11 @@ This is not "upload PDFs and chat with them". It is an exercise in the engineeri
 
 This repository is a portfolio project, and it is explicit about what works today and what does not.
 
-**Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, and a Foundry agent that answers with citations over MCP.
+**Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, a Foundry agent that answers with citations over MCP, and a FastAPI gateway that exposes it with citations resolved as structured data.
 
-**Not built yet:** the FastAPI gateway and the Next.js frontend. Until those exist the "end-to-end agent, API and UI path" that defines the MVP is incomplete. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
+**Not built yet:** the Next.js frontend. Until it exists the "end-to-end agent, API and UI path" that defines the MVP is incomplete. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
 
-The retrieval gate is formally accepted, with evidence, in [`docs/verification/phase-2-retrieval-acceptance.md`](docs/verification/phase-2-retrieval-acceptance.md).
+The retrieval, agent and API gates are formally accepted, with evidence, in [`docs/verification/`](docs/verification/).
 
 ---
 
@@ -45,12 +45,15 @@ flowchart TD
     IDX["Generated pipeline<br/>datasource · skillset · indexer · index"]
     KB["Foundry IQ knowledge base"]
     AGENT["Foundry agent<br/>aurora-knowledge-agent"]
-    USER["User"]
+    API["FastAPI gateway<br/>POST /api/chat"]
+    USER["Client"]
 
     MD --> SYNC --> BLOB --> KS --> IDX --> KB
-    USER --> AGENT
+    USER --> API
+    API -->|"conversation_id + message"| AGENT
     AGENT -->|"MCP: knowledge_base_retrieve"| KB
     KB -->|"grounded chunks + citations"| AGENT
+    AGENT -->|"answer + citation spans resolved to URLs"| API
 ```
 
 Azure resources, all in `canadacentral`:
@@ -63,6 +66,8 @@ Azure resources, all in `canadacentral`:
 | Azure AI Search (Basic) | Hosts the knowledge source, the knowledge base and the generated index |
 | Azure Blob Storage | The document corpus at runtime |
 | Managed identities and RBAC | Every hop authenticates with Microsoft Entra ID |
+
+The FastAPI gateway runs locally for now. The three components before it are deployed Azure resources.
 
 ### Why Foundry IQ, and what it owns
 
@@ -200,6 +205,22 @@ uv run enterprise-knowledge-agent
 
 Or use the Foundry playground. Try the flagship question above, then try asking about a policy that does not exist and watch it refuse.
 
+### 7. Serve it over HTTP
+
+```bash
+uv run uvicorn enterprise_knowledge_agent.api:app --reload
+```
+
+Interactive OpenAPI documentation is at `http://127.0.0.1:8000/docs`.
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"What are the alert thresholds for PgBouncer pool utilisation?"}'
+```
+
+The response carries the answer, a `conversation_id`, and a `citations` array. Send the `conversation_id` back with your next message to continue the conversation. Each citation gives a source URL plus `start_index` and `end_index`, so the client slices the answer text at those offsets and replaces the `【N:M†source】` marker with a link.
+
 ---
 
 ## Design decisions
@@ -230,8 +251,8 @@ A few constraints learned the hard way, all recorded in the verification note:
 | 0 Foundation | Accepted |
 | 1 Infrastructure and knowledge source | Accepted |
 | 2 Retrieval MVP | **Accepted 2026-09-19** |
-| 3 Foundry agent | Deployed and answering; formal acceptance pending |
-| 4 FastAPI gateway | Not started |
+| 3 Foundry agent | **Accepted 2026-09-19** |
+| 4 FastAPI gateway | **Accepted 2026-09-19** |
 | 5 Next.js frontend | Not started — completes the MVP |
 | 6-14 | Retrieval optimization, dynamic tools, MCP, security, prompt-injection defenses, evaluations, observability, CI/CD, infrastructure hardening |
 | 15 | SharePoint as a deliberately late second knowledge source |
