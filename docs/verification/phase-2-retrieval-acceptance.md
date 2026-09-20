@@ -193,6 +193,13 @@ probes, not that the agent cannot hallucinate.
 - Citation URLs point at a **private** Blob container, so an end user cannot open
   them without a proxy or a user-delegation SAS. This constrains the Phase 5
   frontend design.
+
+  > **Amendment, 2026-09-20.** Closed in Phase 9 by the user-delegation SAS route
+  > this limitation anticipated. The gateway mints a five-minute, read-only,
+  > single-blob SAS per citation and returns it as `source_url`, so a citation
+  > link now opens. `url` keeps the canonical Blob URL and is never replaced by
+  > the SAS. The limitation is left in place rather than rewritten because it was
+  > accurate at this gate and it names the fix that was eventually taken.
 - The MCP tool reference must be the connection **ARM ID**, not the connection
   name. Passing the name fails at runtime with `Connection resolution failed`.
 - `require_approval` is `never` on the MCP tool, so the agent calls the knowledge

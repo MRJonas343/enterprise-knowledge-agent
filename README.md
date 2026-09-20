@@ -288,6 +288,8 @@ curl -X POST http://127.0.0.1:8000/api/chat \
 
 The response carries the answer, a `conversation_id`, and a `citations` array. Send the `conversation_id` back with your next message to continue the conversation. Each citation gives a source URL plus `start_index` and `end_index`, so the client slices the answer text at those offsets and replaces the `【N:M†source】` marker with a link.
 
+Each citation also carries `source_url`: the same document, with a short-lived read-only SAS appended, so the link actually opens. The Blob container is private, and the link expires after five minutes. `url` keeps the canonical Blob URL and is never replaced by the SAS, so the identity of a source does not expire with the credential that reaches it.
+
 ### 8. Run the frontend
 
 With the gateway from step 7 still running:
@@ -298,7 +300,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` and ask a question. Answers render with numbered citation links, and every number is listed underneath with its source document, so the grounding can actually be inspected rather than taken on faith.
+Open `http://localhost:3000` and ask a question. Answers render with numbered citation links, and every number is listed underneath with its source document, so the grounding can actually be inspected rather than taken on faith. Clicking a number opens the cited document.
 
 ![The frontend answering the flagship question in dark mode, with numbered citation links](assets/Agent_Test_UI_NextJS.png)
 
