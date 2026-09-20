@@ -51,23 +51,21 @@ Structure rules that must not drift:
 - The Git corpus is the source of truth. Documents are never edited directly in Azure.
 - Terraform owns control-plane resources only. Knowledge sources and knowledge bases are Azure AI Search data-plane objects and are created by the scripts in `src/scripts/`, never by Terraform or azapi.
 
-## Current Boundary: MVP Complete, Post-MVP Not Started
+## Current Boundary: Phase 9 Security In Progress
 
 Phases 0 to 5 are accepted and the MVP is complete. All five gates were cleared on 2026-09-19; the evidence is in [`docs/verification/`](docs/verification/).
 
-The MVP is defined by the roadmap as phases 3 to 5, and that is what is complete:
+**The post-MVP boundary was explicitly superseded on 2026-09-20 by the project owner, who selected Phase 9, Security, as the next phase.** Post-MVP work is therefore authorized within Phase 9 and its prerequisites. Phases 6, 7, 8 and 10-15 remain unstarted and unblocked only as the roadmap's dependency table allows.
 
-- Phase 3: Foundry Agent Service integrated with the knowledge base. Accepted 2026-09-19.
-- Phase 4: FastAPI application gateway. Accepted 2026-09-19.
-- Phase 5: Next.js frontend in `frontend/`. Accepted 2026-09-19.
+Phase 9 is recorded as the phase with no post-MVP dependency beyond Phase 5, alongside Phase 6 (retrieval optimisation). Its dependency column also names "operational-tool design from Phase 7", and Phase 7 is not started, so the tool-authorization portion of Phase 9 is deferred and only the existing surface is hardened. That coupling is deliberate and visible rather than resolved by assuming a tool design that does not exist yet.
 
 The end-to-end path was verified with a live request carrying a browser origin: a question submitted through the frontend's own request path reached the gateway, the agent, and the knowledge base, and the returned citations rendered as source links.
 
-**Completing the MVP is not the same as being production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, CI/CD and SharePoint are phases 6 to 15 and remain unstarted, and observability reaches only as far as the two narrow exceptions recorded below. The MVP proves the path works; those phases would prove it can be operated.
+**Completing the MVP is not the same as being production-ready.** Operational MCP tools, prompt-injection defenses, evaluations, CI/CD and SharePoint remain unstarted, and observability reaches only as far as the two narrow exceptions recorded below. Phase 9 is the first attempt to move from "the path works" toward "it can be operated".
 
 One limitation carried forward from Phase 5, and one that was closed after it. Citation offsets are produced by a Python process and applied by JavaScript, so they would misalign if a non-BMP character ever entered an answer. The interactive browser flow, which the Phase 5 record left unverified, was subsequently driven by the project owner and works. That amendment is recorded in the Phase 5 acceptance record.
 
-**Hard gate:** do not start post-MVP work (phases 6-15) before this boundary is explicitly superseded. Read the acceptance records before changing anything that affects grounding, citations or the knowledge source.
+**Boundary rule:** read the acceptance records before changing anything that affects grounding, citations or the knowledge source, and keep every phase gate's evidence honest about what it did and did not verify.
 
 ### Narrow exception: the grounding probe fixture
 

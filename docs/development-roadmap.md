@@ -4,6 +4,7 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 
 ## Status Legend
 
+- **In progress:** the boundary has been superseded for this phase and work is authorized.
 - **Accepted:** the phase gate is cleared and dated evidence is recorded in `docs/verification/`.
 - **Next:** authorized only after the preceding phase gate is accepted.
 - **Planned:** documented for sequencing, not authorized now.
@@ -36,7 +37,7 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | 6 Retrieval optimization | Measured improvements to retrieval quality, relevance, latency, and cost without replacing Foundry IQ or weakening citation and grounding guarantees. | Phase 5 MVP completion; Phase 2 regression baseline | Optimizations are measured against the accepted retrieval baseline and documented without regressing source identity, citations, or groundedness. | **Planned; post-MVP** |
 | 7 Dynamic operational tools | Explicitly approved operational tools, schemas, authorization boundaries, timeouts, auditability, and failure semantics. Tools are separate from the retrieval layer. | Phase 5 MVP completion; approved tool contracts and security inputs | Tool calls are schema-validated, denied by default, auditable, bounded, and covered by positive and negative tests. | **Planned; post-MVP** |
 | 8 MCP | Governed MCP exposure for approved operational tools, including server boundaries, schemas, authorization, timeouts, and failure handling. MCP is not a substitute for Foundry IQ retrieval. | Phase 7; Phase 9 security direction may constrain rollout | MCP tool behavior is interoperable, policy-controlled, observable, and tested without broadening the approved tool set implicitly. | **Planned; post-MVP** |
-| 9 Security | Identity boundaries, least privilege, network and data controls, secrets handling, retention, audit requirements, and threat-model follow-through. | Phase 5 MVP completion; operational-tool design from Phase 7 | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **Planned; post-MVP** |
+| 9 Security | Identity boundaries, least privilege, network and data controls, secrets handling, retention, audit requirements, and threat-model follow-through. | Phase 5 MVP completion; operational-tool design from Phase 7 | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **In progress.** Boundary superseded 2026-09-20 by the project owner. Phase 7 is not started, so tool authorization is deferred and only the existing surface is hardened. |
 | 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Planned; post-MVP** |
 | 11 Evaluations | Repeatable groundedness, relevance, citation correctness, retrieval quality, tool safety, prompt-injection, latency, and cost evaluations with regression fixtures. | Phase 6-10; authorized synthetic or scrubbed fixtures | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Planned; post-MVP** |
 | 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval/citation/tool events across the approved runtime path with sensitive-data redaction. | Phase 9-11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
@@ -59,7 +60,7 @@ Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orches
 
 ## Work Record
 
-Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). Phases 6-15 remain unstarted and gated on an explicit supersession of the current boundary.
+Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). **Post-MVP boundary superseded 2026-09-20**: the project owner selected Phase 9, Security, as the next phase.
 
 Two narrow exceptions were explicitly authorized by the project owner before that supersession, and neither opens its phase:
 
