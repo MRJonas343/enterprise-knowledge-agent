@@ -8,10 +8,13 @@ same serialization the service produces.
 from __future__ import annotations
 
 import asyncio
+import base64
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from agent_framework import AgentResponse, Content, Message
 from agent_framework._sessions import AgentSession
+from azure.storage.blob import UserDelegationKey
 from fastapi.testclient import TestClient
 
 from enterprise_knowledge_agent import api
@@ -20,6 +23,11 @@ MARKER = "【5:1†source】"
 
 ALICE = "tok_alice"
 BOB = "tok_bob"
+
+CORPUS_URL = (
+    "https://knowledgeagent343.blob.core.windows.net/"
+    "enterprise-knowledge/incidents/INC-2026-002.md"
+)
 
 
 class FakeAgent:
@@ -60,9 +68,15 @@ def _isolate(monkeypatch):
     monkeypatch.setenv("API_TOKENS", f"alice:{ALICE},bob:{BOB}")
     api.SESSIONS.clear()
     api._RATE_WINDOWS.clear()
+    # The delegation key cache is process state; clear it so one test cannot
+    # reuse a key another test injected.
+    api._delegation_key = None
+    api._delegation_key_expiry = None
     yield
     api.SESSIONS.clear()
     api._RATE_WINDOWS.clear()
+    api._delegation_key = None
+    api._delegation_key_expiry = None
     api.app.dependency_overrides.clear()
 
 
@@ -327,3 +341,156 @@ def test_expired_rate_window_is_pruned(monkeypatch):
 def test_message_over_two_thousand_characters_is_422():
     response = _client(FakeAgent()).post("/api/chat", json={"message": "x" * 2001})
     assert response.status_code == 422
+
+
+# --- Citation source links --------------------------------------------------
+#
+# No Azure call is made here: corpus_blob_target is pure, and the signing path is
+# exercised with an injected user-delegation key. generate_blob_sas is a local
+# signing operation, so once the key is injected nothing touches the network.
+
+
+def _fake_user_delegation_key(*, lifetime: timedelta = timedelta(hours=1)) -> UserDelegationKey:
+    now = datetime.now(timezone.utc)
+    key = UserDelegationKey()
+    key.signed_oid = "00000000-0000-0000-0000-000000000000"
+    key.signed_tid = "11111111-1111-1111-1111-111111111111"
+    key.signed_start = now
+    key.signed_expiry = now + lifetime
+    key.signed_service = "b"
+    key.signed_version = "2021-08-06"
+    key.value = base64.b64encode(b"fake-delegation-key").decode()
+    return key
+
+
+def _configure_corpus(monkeypatch):
+    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT_NAME", "knowledgeagent343")
+    monkeypatch.setenv("AZURE_KNOWLEDGE_CONTAINER", "enterprise-knowledge")
+
+
+def test_corpus_blob_target_returns_container_and_path(monkeypatch):
+    _configure_corpus(monkeypatch)
+
+    assert api.corpus_blob_target(CORPUS_URL) == (
+        "enterprise-knowledge",
+        "incidents/INC-2026-002.md",
+    )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        # A lookalike host that merely starts with the real one.
+        "https://knowledgeagent343.blob.core.windows.net.evil.example/enterprise-knowledge/incidents/INC-2026-002.md",
+        # A different storage account.
+        "https://otheraccount.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-002.md",
+        # A different container on the same account.
+        "https://knowledgeagent343.blob.core.windows.net/other-container/incidents/INC-2026-002.md",
+        # Plainly not a URL / nothing to parse.
+        "not a url",
+        "",
+        # No blob path at all.
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/",
+        # Path traversal.
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/../secrets.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/a/../../b.md",
+        # Wrong scheme.
+        "http://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-002.md",
+        # The account name only appears in the path, not the host.
+        "https://evil.example/knowledgeagent343.blob.core.windows.net/enterprise-knowledge/x.md",
+        # Already carries a query, so it is not the bare canonical identity.
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/x.md?sig=abc",
+    ],
+)
+def test_corpus_blob_target_rejects_anything_outside_the_corpus(url, monkeypatch):
+    _configure_corpus(monkeypatch)
+
+    assert api.corpus_blob_target(url) is None
+
+
+def test_corpus_blob_target_without_a_configured_account_is_none(monkeypatch):
+    monkeypatch.delenv("AZURE_STORAGE_ACCOUNT_NAME", raising=False)
+
+    assert api.corpus_blob_target(CORPUS_URL) is None
+
+
+def test_unresolvable_citation_keeps_its_url_and_has_no_source_url(monkeypatch):
+    _configure_corpus(monkeypatch)
+    # A non-corpus URL must never reach the key fetch; the counter proves it.
+    fetches: list[int] = []
+    monkeypatch.setattr(
+        api, "_fetch_user_delegation_key", lambda: fetches.append(1) or _fake_user_delegation_key()
+    )
+
+    url = "https://example.com/not-the-corpus.md"
+    answer = f"See {MARKER}"
+    start = answer.index(MARKER)
+    fake = FakeAgent(answer=answer, spans=[(url, None, start, start + len(MARKER))])
+
+    response = _client(fake).post("/api/chat", json={"message": "hips?"})
+
+    assert response.status_code == 200
+    citation = response.json()["citations"][0]
+    # The canonical identity is preserved even though it cannot be opened.
+    assert citation["url"] == url
+    assert citation["source_url"] is None
+    assert fetches == []
+
+
+def test_corpus_citation_gets_a_distinct_openable_source_url(monkeypatch):
+    _configure_corpus(monkeypatch)
+    monkeypatch.setattr(api, "_fetch_user_delegation_key", _fake_user_delegation_key)
+
+    answer = f"See {MARKER}"
+    start = answer.index(MARKER)
+    fake = FakeAgent(answer=answer, spans=[(CORPUS_URL, None, start, start + len(MARKER))])
+
+    response = _client(fake).post("/api/chat", json={"message": "the incident?"})
+
+    assert response.status_code == 200
+    citation = response.json()["citations"][0]
+    # The canonical identity is unchanged; the SAS lives only in source_url.
+    assert citation["url"] == CORPUS_URL
+    assert citation["source_url"] is not None
+    assert citation["source_url"] != CORPUS_URL
+    assert citation["source_url"].startswith(f"{CORPUS_URL}?")
+    # Read-only and blob-scoped.
+    assert "sp=r" in citation["source_url"]
+    assert "sr=b" in citation["source_url"]
+
+
+def test_delegation_key_is_not_fetched_again_within_its_lifetime(monkeypatch):
+    _configure_corpus(monkeypatch)
+    fetches: list[int] = []
+
+    def fake_fetch():
+        fetches.append(1)
+        return _fake_user_delegation_key()
+
+    monkeypatch.setattr(api, "_fetch_user_delegation_key", fake_fetch)
+
+    first = api._mint_source_url(CORPUS_URL)
+    second = api._mint_source_url(CORPUS_URL)
+
+    assert first is not None and second is not None
+    assert len(fetches) == 1
+
+
+def test_delegation_key_is_refetched_once_it_has_expired(monkeypatch):
+    _configure_corpus(monkeypatch)
+    fetches: list[int] = []
+
+    def fake_fetch():
+        fetches.append(1)
+        return _fake_user_delegation_key()
+
+    monkeypatch.setattr(api, "_fetch_user_delegation_key", fake_fetch)
+
+    assert api._mint_source_url(CORPUS_URL) is not None
+    assert len(fetches) == 1
+
+    # Force the cached key past its refresh margin; the next mint refetches.
+    api._delegation_key_expiry = datetime.now(timezone.utc) - timedelta(seconds=1)
+    assert api._mint_source_url(CORPUS_URL) is not None
+    assert len(fetches) == 2

@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { ask } from "@/lib/api";
+import { ask, type Citation } from "@/lib/api";
 import { buildSegments, type Segment } from "@/lib/citations";
 import { parseMarkdownLite, type Block, type Inline } from "@/lib/markdown";
 
@@ -37,6 +37,19 @@ function readTheme(): Theme {
 /** Used during hydration so the first client render matches the server's "light". */
 function readServerTheme(): Theme {
   return "light";
+}
+
+/**
+ * A citation identifies its source with the canonical Blob `url` and offers an
+ * openable `source_url` when the gateway could mint one. The segment builder
+ * treats the url as an opaque string, so hand it the openable URL when present
+ * and fall back to the canonical one, which still shows where the source lives
+ * even when the link will not open.
+ */
+function openableCitations(citations: Citation[]): Citation[] {
+  return citations.map((citation) =>
+    citation.source_url ? { ...citation, url: citation.source_url } : citation,
+  );
 }
 
 function renderInline(inline: Inline[], keyPrefix: string): ReactNode[] {
@@ -254,7 +267,7 @@ export default function Home() {
       setConversationId(response.conversation_id);
       setTurns((previous) => [
         ...previous,
-        { question: message, segments: buildSegments(response.answer, response.citations) },
+        { question: message, segments: buildSegments(response.answer, openableCitations(response.citations)) },
       ]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Something went wrong.");

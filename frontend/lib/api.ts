@@ -1,6 +1,12 @@
-import type { Citation } from "./citations";
+import type { Citation as CorpusCitation } from "./citations";
 
-export type { Citation };
+/**
+ * A citation as returned by the gateway. `url` is the canonical Blob URL and is
+ * the identity of the source; `source_url` is a short-lived SAS URL that can
+ * actually be opened, or null when the gateway could not mint one. The canonical
+ * URL is never replaced by the SAS, so the identity does not expire with it.
+ */
+export type Citation = CorpusCitation & { source_url?: string | null };
 
 export type ChatResponse = {
   conversation_id: string;

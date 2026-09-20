@@ -23,13 +23,21 @@ import os
 import secrets
 import time
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated, Any
+from urllib.parse import urlsplit
 
 import yaml
 from agent_framework._sessions import AgentSession
 from agent_framework.foundry import FoundryAgent
 from azure.identity import DefaultAzureCredential
+from azure.storage.blob import (
+    BlobSasPermissions,
+    BlobServiceClient,
+    UserDelegationKey,
+    generate_blob_sas,
+)
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -85,7 +93,11 @@ _RATE_WINDOWS: dict[str, tuple[float, int]] = {}
 
 
 class Citation(BaseModel):
+    # `url` is the canonical Blob URL: the identity of the source. It is never a
+    # credential. `source_url` is a short-lived, read-only SAS URL a client can
+    # actually open, or None when it could not be minted.
     url: str
+    source_url: str | None = None
     title: str | None = None
     start_index: int
     end_index: int
@@ -199,14 +211,143 @@ def _check_rate_limit(caller: str) -> None:
         )
 
 
+# Citation source links are short-lived: they are links inside an answer, not
+# downloads to keep. Five minutes is enough for a reader to click one.
+SAS_LIFETIME = timedelta(minutes=5)
+
+# Backdating the SAS start absorbs clock skew between the gateway and Blob.
+SAS_START_SKEW = timedelta(seconds=60)
+
+# get_user_delegation_key is a network round trip, and the gateway talks to one
+# storage account, so one key is cached and reused until shortly before expiry.
+# Without this a chat response would pay that round trip once per citation.
+DELEGATION_KEY_LIFETIME = timedelta(hours=1)
+DELEGATION_KEY_REFRESH_MARGIN = timedelta(seconds=60)
+
+_delegation_key: UserDelegationKey | None = None
+_delegation_key_expiry: datetime | None = None
+
+
+def corpus_blob_target(url: str) -> tuple[str, str] | None:
+    """Return (container, blob_path) if url is a corpus Blob URL, else None.
+
+    This is a security control, not a convenience: whatever this returns is what
+    the gateway proceeds to sign. Anything outside the configured storage account
+    and knowledge container is refused, so a SAS is never minted for a URL the
+    corpus does not own.
+
+    The account and container are read per call, like the token map, so tests and
+    a redeployed gateway can vary them without reimporting this module.
+    """
+    account = os.environ.get("AZURE_STORAGE_ACCOUNT_NAME", "").strip().lower()
+    container = os.environ.get("AZURE_KNOWLEDGE_CONTAINER", "enterprise-knowledge").strip()
+    if not account or not container:
+        return None
+
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return None
+
+    # parsed.hostname is lowercased and excludes any port. A lookalike such as
+    # "…blob.core.windows.net.evil.example" has a different hostname and fails
+    # here, as does a different account or a non-https scheme.
+    if parsed.scheme != "https":
+        return None
+    if (parsed.hostname or "").lower() != f"{account}.blob.core.windows.net":
+        return None
+
+    # A canonical citation URL carries no query or fragment; one that does is not
+    # the bare identity we sign against.
+    if parsed.query or parsed.fragment:
+        return None
+
+    # Blob URLs are /<container>/<blob path>.
+    if not parsed.path.startswith("/"):
+        return None
+    container_name, separator, blob_path = parsed.path[1:].partition("/")
+    if not separator or container_name != container or not blob_path:
+        return None
+
+    # Refuse dot segments and backslashes: the blob path must read as a literal
+    # path under the container, never as traversal out of it.
+    if "\\" in blob_path or any(part in ("", ".", "..") for part in blob_path.split("/")):
+        return None
+
+    return container_name, blob_path
+
+
+def _fetch_user_delegation_key() -> UserDelegationKey:
+    """Ask Blob for a user-delegation key. This is the only network call here."""
+    account = os.environ.get("AZURE_STORAGE_ACCOUNT_NAME", "").strip()
+    service = BlobServiceClient(
+        account_url=f"https://{account}.blob.core.windows.net",
+        credential=DefaultAzureCredential(),
+    )
+    now = datetime.now(timezone.utc)
+    return service.get_user_delegation_key(
+        key_start_time=now,
+        key_expiry_time=now + DELEGATION_KEY_LIFETIME,
+    )
+
+
+def _user_delegation_key() -> UserDelegationKey:
+    """Return the cached delegation key, refetching shortly before it expires."""
+    global _delegation_key, _delegation_key_expiry
+    now = datetime.now(timezone.utc)
+    if (
+        _delegation_key is not None
+        and _delegation_key_expiry is not None
+        and now + DELEGATION_KEY_REFRESH_MARGIN < _delegation_key_expiry
+    ):
+        return _delegation_key
+    key = _fetch_user_delegation_key()
+    _delegation_key = key
+    _delegation_key_expiry = key.signed_expiry
+    return key
+
+
+def _mint_source_url(url: str) -> str | None:
+    """Return a short-lived read-only SAS URL for a corpus citation, or None.
+
+    Fail soft: a citation whose link cannot be minted is still returned, with
+    source_url None. An answer without a working link is degraded; an answer
+    replaced by a 500 because a secondary concern failed is broken.
+    """
+    target = corpus_blob_target(url)
+    if target is None:
+        return None
+    container, blob_path = target
+
+    try:
+        account = os.environ.get("AZURE_STORAGE_ACCOUNT_NAME", "").strip()
+        now = datetime.now(timezone.utc)
+        sas = generate_blob_sas(
+            account_name=account,
+            container_name=container,
+            blob_name=blob_path,
+            user_delegation_key=_user_delegation_key(),
+            permission=BlobSasPermissions(read=True),
+            start=now - SAS_START_SKEW,
+            expiry=now + SAS_LIFETIME,
+        )
+    except Exception:
+        logging.exception("could not mint a source link for %s", url)
+        return None
+
+    return f"{url}?{sas}"
+
+
 def _collect_citations(data: Any) -> list[Citation]:
     citations: list[Citation] = []
     if isinstance(data, dict):
         if data.get("type") == "citation":
             for region in data.get("annotated_regions") or []:
+                url = data.get("url", "")
                 citations.append(
                     Citation(
-                        url=data.get("url", ""),
+                        url=url,
+                        source_url=_mint_source_url(url),
                         title=data.get("title"),
                         start_index=region["start_index"],
                         end_index=region["end_index"],
