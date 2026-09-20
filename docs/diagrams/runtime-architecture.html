@@ -5602,7 +5602,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <ul>
           <li>&bull; Keyless throughout: storage sets shared_access_key_enabled = false and Azure AI Search sets local_authentication_enabled = false.</li>
           <li>&bull; Terraform owns the Azure control plane; the deploy scripts own the data-plane objects Terraform cannot manage.</li>
-          <li>&bull; Citation URLs point at a private container, so a proxy or user-delegation SAS is required ahead of Phase 5.</li>
+          <li>&bull; Citation URLs point at a private container, so a client needs a proxy or user-delegation SAS to fetch a source directly.</li>
         </ul>
       </div>
 
@@ -5612,8 +5612,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>Scope, Status &amp; Evidence</h3>
         </div>
         <ul>
-          <li>&bull; Scope: Phase 0-3 in canadacentral; Phases 4-5 (FastAPI gateway, Next.js UI) are not implemented and are omitted.</li>
-          <li>&bull; Verified 2026-09-19 per docs/verification/phase-2-retrieval-acceptance.md; formal Phase 3 acceptance is pending.</li>
+          <li>&bull; Scope: the deployed Azure path through Phase 3 in canadacentral; the Phase 4 FastAPI gateway and Phase 5 Next.js UI run as local processes and are omitted.</li>
+          <li>&bull; Verified 2026-09-19; phases 2 and 3 accepted, evidence in docs/verification/.</li>
           <li>&bull; Preview: Foundry IQ agentic retrieval, azure-search-documents 12.1.0b2, Search REST 2026-08-01-preview.</li>
         </ul>
       </div>

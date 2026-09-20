@@ -20,4 +20,4 @@ Plan to use MCP for explicitly approved, schema-validated runtime tools after th
 
 ## Consequences
 
-Tool schemas, authorization, timeouts, auditability, and negative tests must be designed in a later phase. No MCP server or tool implementation is authorized before Phase 2 retrieval acceptance.
+Tool schemas, authorization, timeouts, auditability, and negative tests must be designed in a later phase. The Phase 2 retrieval acceptance this decision was conditioned on is complete (2026-09-19); MCP runtime tools remain post-MVP and are not yet authorized.

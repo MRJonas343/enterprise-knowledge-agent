@@ -115,7 +115,7 @@ Each gate needs a dated verification note or linked change record. A plan, mock,
 - Terraform owns resource definitions, naming inputs, configuration, and reproducibility.
 - Keep environment-specific values in documented variable inputs or approved secret stores; never commit credentials, tokens, connection strings, or private endpoints.
 - Record provider versions, API versions, region assumptions, preview flags, and manual prerequisites.
-- Use least privilege and secure defaults when a phase permits security implementation; before Phase 2, limit work to safe bootstrap hygiene and retrieval prerequisites.
+- Use least privilege and secure defaults when a phase permits security implementation.
 - Storage is keyless. `shared_access_key_enabled = false` only works together with `storage_use_azuread = true` in the provider block, because the provider makes its own data-plane calls while managing the account. Never re-enable shared keys to get past a failure; fix the identity path instead.
 - Azure AI Search also runs keyless (`local_authentication_enabled = false`), so the operator needs Search Service Contributor and Search Index Data Contributor rather than admin API keys.
 
@@ -124,7 +124,7 @@ Each gate needs a dated verification note or linked change record. A plan, mock,
 - Treat enterprise documents, prompts, citations, logs, and evaluation fixtures as potentially sensitive.
 - Redact secrets and personal data from examples, logs, screenshots, and test fixtures.
 - Do not upload real confidential documents for local validation without explicit authorization.
-- Do not begin the security-hardening phase before Phase 2 acceptance, but never weaken credential hygiene to unblock Phase 2.
+- Do not begin the security-hardening phase before the current post-MVP boundary is explicitly superseded, and never weaken credential hygiene to unblock a phase.
 
 ## Documentation Rules
 

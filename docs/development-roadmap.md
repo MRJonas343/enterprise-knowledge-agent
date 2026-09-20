@@ -21,7 +21,7 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | Post-MVP | 6-14 | Retrieval optimization, tools, MCP, security, evaluations, observability, delivery, and infrastructure hardening are production-shaped. |
 | Late second source | 15 | SharePoint is introduced only after post-MVP governance, security, evaluation, and rollback evidence is accepted. |
 
-**Phase 6 onward is post-MVP. Phase 15 is deliberately late. No post-retrieval implementation starts before Phase 2 retrieval acceptance is recorded.**
+**Phase 6 onward is post-MVP. Phase 15 is deliberately late. No post-MVP work starts before the current boundary is explicitly superseded.**
 
 ## Phase Sequence
 
@@ -57,16 +57,6 @@ The implementation order is not interchangeable:
 
 Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orchestration, ranking, chunking, query routing, or citation assembly is out of scope unless a verified gap is documented and an ADR is accepted.
 
-## Current Work Checklist
+## Work Record
 
-- [x] Documentation-only bootstrap created.
-- [x] Phase 0-15 sequence, dependencies, gates, and late SharePoint boundary documented.
-- [x] Review and accept the Phase 0 foundation contract.
-- [x] Implement Phase 1 Terraform foundation, knowledge source, and Blob-backed Foundry IQ Knowledge Base.
-- [x] Implement Phase 2 retrieval validation and record the hard acceptance evidence.
-- [x] Deploy the Phase 3 Foundry agent with the knowledge base MCP tool.
-- [x] Record formal Phase 3 acceptance.
-- [x] Implement Phase 4, the FastAPI gateway, and record its acceptance. Citation rendering closed the gap carried from Phase 3.
-- [x] Implement Phase 5, the Next.js frontend, and record its acceptance. CORS configured for the browser origin.
-- [x] Reconcile the MVP gate wording. The MVP is phases 3-5, and the gate row in `AGENTS.md` now matches this roadmap.
-- [x] **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, evidence in `docs/verification/`.
+Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). Phases 6-15 remain unstarted and gated on an explicit supersession of the current boundary.

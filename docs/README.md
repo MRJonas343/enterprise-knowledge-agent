@@ -8,7 +8,7 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 | --- | --- |
 | Know what may be implemented now | [`../AGENTS.md`](../AGENTS.md) |
 | Find the active phase and gate | [`development-roadmap.md`](development-roadmap.md) |
-| Understand the product and target system | [`project-context.md`](project-context.md) |
+| Understand the product and architecture | [`project-context.md`](project-context.md) |
 | Follow the agent workflow | [`agent-guidelines.md`](agent-guidelines.md) |
 | Review architecture boundaries | [`architecture/README.md`](architecture/README.md) |
 | Review or add a decision | [`adr/README.md`](adr/README.md) |
@@ -17,20 +17,7 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 
 ## Current Status
 
-| Phase | Status |
-| --- | --- |
-| Phase 0 Foundation | Accepted |
-| Phase 1 Infrastructure + knowledge source | Accepted |
-| Phase 2 Retrieval | **Accepted 2026-09-19** |
-| Phase 3 Foundry agent | **Accepted 2026-09-19** |
-| Phase 4 FastAPI gateway | **Accepted 2026-09-19** |
-| Phase 5 Next.js frontend | **Accepted 2026-09-19** |
-
-**The MVP is complete.** The roadmap defines it as phases 3-5 — Foundry Agent Service, FastAPI and Next.js — and all three gates are accepted with dated evidence.
-
-Completing the MVP is not the same as being production-ready. Evaluations, observability, security hardening, prompt-injection defenses, CI/CD and SharePoint are phases 6-15 and remain unstarted.
-
-Read the recorded evidence in [`verification/`](verification/).
+Phases 0-5 are accepted and the MVP is complete as of 2026-09-19; phases 6-15 remain unstarted. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
 
 ## Reading Order
 
@@ -47,11 +34,11 @@ Read the recorded evidence in [`verification/`](verification/).
 | `development-roadmap.md` | Phase 0-15 sequence and gates | Maintained plan |
 | `agent-guidelines.md` | Agent operating rules | Maintained contract |
 | `project-context.md` | Durable product brief | Product intent and target context |
-| `architecture/README.md` | Target and MVP data path | Target architecture; implementation is future work |
+| `architecture/README.md` | Architecture index and MVP data path | Maintained; path implemented and accepted |
 | `adr/` | Durable decisions and assumptions | Initial decisions documented |
 | `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19 |
 | `diagrams/` | Diagram evidence and ownership rules | Index only |
 
 ## Contribution Rule
 
-Documentation changes must preserve the Phase 2 gate, identify assumptions about preview/evolving Foundry APIs, and avoid presenting planned components as implemented. Add an ADR when a change is architectural or changes an approved boundary.
+Documentation changes must keep the accepted gates intact, identify assumptions about preview/evolving Foundry APIs, and avoid presenting planned components as implemented. Add an ADR when a change is architectural or changes an approved boundary.

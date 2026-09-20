@@ -23,17 +23,14 @@ These rules make work reproducible, reviewable, and safe. They apply to agents a
 
 ## Phase Discipline
 
-The active implementation boundary is Phase 0-2. Before Phase 2 retrieval acceptance, do not implement Foundry Agent Service, FastAPI runtime code, Next.js, MCP, evaluations, OpenTelemetry runtime instrumentation, security hardening, SharePoint, or other post-retrieval work. It is acceptable to document interfaces and dependencies as planned, but not to create placeholders that imply implementation.
+Phases 0-5 are accepted and the MVP is complete: the infrastructure, the knowledge source, cited retrieval, the Foundry agent, the FastAPI gateway and the Next.js frontend are implemented, with evidence in [`verification/`](verification/). Post-MVP work (phases 6-15) must not start until the current boundary is explicitly superseded. It is acceptable to document post-MVP interfaces and dependencies as planned, but not to create placeholders that imply implementation.
 
-Phase 2 is accepted only when the same known Markdown source can be traced through version control, Blob Storage, the Blob-backed Foundry IQ Knowledge Base, and a cited retrieval result.
+Phase 2 was accepted once the same known Markdown source could be traced through version control, Blob Storage, the Blob-backed Foundry IQ Knowledge Base, and a cited retrieval result.
 
 ## Azure Boundary Rules
 
-- Terraform is the source of truth for Azure infrastructure from day one.
 - Verify provider versions, API versions, regional availability, preview labels, quotas, and current CLI/SDK syntax against official Microsoft documentation.
 - Record every non-obvious assumption in the roadmap, an ADR, or a phase verification note.
-- Keep Foundry IQ responsible for retrieval intelligence in the MVP. Do not introduce custom chunking, ranking, query routing, or citation assembly without an accepted, evidence-backed decision.
-- Keep the primary knowledge path Blob-backed until a later source has passed its own governance and evaluation gate.
 - Do not mix manual portal changes into a reproducibility claim. If a manual prerequisite is unavoidable, document it explicitly and track its removal.
 
 ## Validation Expectations

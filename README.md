@@ -156,6 +156,42 @@ docs/                          Architecture, ADRs, roadmap, verification records
 - Terraform 1.x, the Azure CLI, and Python 3.12 with [uv](https://docs.astral.sh/uv/)
 - The `Foundry User` and `Foundry Project Manager` roles on the Foundry resource, to create agents and project connections
 
+### Every command, in order
+
+From a fresh clone. Steps 1 to 6 are first-time setup. Day to day you only need 7 and 8.
+
+```bash
+# 1. Azure infrastructure: resource group, Foundry, models, storage, Azure AI Search
+cd infra/terraform && terraform init && terraform apply && cd ../..
+
+# 2. Configuration. Fill in the values `terraform output` prints.
+cp .env.example .env
+
+# 3. Python dependencies
+uv sync
+
+# 4. Corpus into Blob Storage
+uv run python src/scripts/sync_knowledge.py
+
+# 5. Knowledge source and knowledge base. Waits for ingestion of all documents.
+uv run python src/scripts/deploy_knowledge_base.py
+
+# 6. The agent, whose only tool is the knowledge base
+uv run python src/scripts/deploy_agent.py
+```
+
+Then, in two terminals:
+
+```bash
+# Terminal A - the gateway
+uv run uvicorn enterprise_knowledge_agent.api:app --reload
+
+# Terminal B - the frontend
+cd frontend && npm install && npm run dev
+```
+
+Open `http://localhost:3000` and ask a question. The sections below explain what each step does and why.
+
 ### 1. Provision infrastructure
 
 ```bash
