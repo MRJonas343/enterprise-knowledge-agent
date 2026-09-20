@@ -26,9 +26,9 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 | Phase 4 FastAPI gateway | **Accepted 2026-09-19** |
 | Phase 5 Next.js frontend | **Accepted 2026-09-19** |
 
-The end-to-end agent, API and UI path works, so the roadmap's MVP (phases 3-5) is complete. Evaluations, observability, security hardening, prompt-injection defenses and SharePoint stay in later phases.
+**The MVP is complete.** The roadmap defines it as phases 3-5 — Foundry Agent Service, FastAPI and Next.js — and all three gates are accepted with dated evidence.
 
-The **MVP milestone is deliberately not claimed yet.** The roadmap defines the MVP as phases 3-5, but the MVP gate row in [`../AGENTS.md`](../AGENTS.md) also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8-12. Until that wording is reconciled, the honest statement is that the end-to-end path is complete and the operational evidence is not.
+Completing the MVP is not the same as being production-ready. Evaluations, observability, security hardening, prompt-injection defenses, CI/CD and SharePoint are phases 6-15 and remain unstarted.
 
 Read the recorded evidence in [`verification/`](verification/).
 

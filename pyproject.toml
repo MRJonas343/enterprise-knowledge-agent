@@ -3,6 +3,7 @@ name = "enterprise-knowledge-agent"
 version = "0.1.0"
 description = "Grounded answers over enterprise knowledge with Microsoft Foundry, Foundry IQ and Azure AI Search"
 readme = "README.md"
+license = "MIT"
 authors = [
     { name = "Jonas", email = "angeljonasrosales@gmail.com" }
 ]

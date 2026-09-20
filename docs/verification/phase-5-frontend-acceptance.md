@@ -131,10 +131,22 @@ The Phase 5 exit criteria are met, and with them the roadmap's MVP: Foundry Agen
 Service, FastAPI and Next.js now provide a working end-to-end grounded user path over
 three accepted gates.
 
-**One documentation inconsistency is recorded rather than silently resolved.** The
-roadmap defines the MVP as phases 3-5, but the MVP gate row in `AGENTS.md` also lists
-"MCP/tool policy, observability, evaluation evidence, and security acceptance", which
-belong to phases 8 through 12 and are explicitly post-MVP. Under the roadmap's own
-definition the MVP is complete; under the `AGENTS.md` wording it is not. The gate
-wording needs reconciling before anyone claims the MVP milestone, and the safer
-reading is that the end-to-end path is complete while the operational evidence is not.
+## A wording inconsistency found and resolved
+
+Recording this gate surfaced a contradiction between two of the repository's own
+documents. The roadmap defines the MVP as phases 3-5. The MVP gate row in
+[`AGENTS.md`](../../AGENTS.md) additionally required "MCP/tool policy, observability,
+evaluation evidence, and security acceptance", which are phases 8 through 12 and
+explicitly post-MVP.
+
+Under the roadmap's definition the MVP became complete at this gate. Under the gate
+row's wording it could not be claimed until most of the post-MVP phases were finished.
+Both could not be true.
+
+**Resolved by the project owner: the MVP is phases 3-5.** The gate row in `AGENTS.md`
+was corrected to match the roadmap, so the MVP is complete with this gate.
+
+The correction is recorded rather than applied silently, because changing what a
+milestone means would otherwise make every earlier acceptance record unreadable. No
+phase evidence changed; only the wording of the milestone.
+

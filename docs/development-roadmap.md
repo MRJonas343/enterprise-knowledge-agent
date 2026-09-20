@@ -1,10 +1,10 @@
 # Development Roadmap
 
-This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **The repository remains a documentation-only bootstrap.**
+This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-5 are accepted and the MVP is complete as of 2026-09-19; phases 6-15 are unstarted and hard-gated behind an explicit supersession of the current boundary.**
 
 ## Status Legend
 
-- **Current:** the documentation boundary being established now.
+- **Accepted:** the phase gate is cleared and dated evidence is recorded in `docs/verification/`.
 - **Next:** authorized only after the preceding phase gate is accepted.
 - **Planned:** documented for sequencing, not authorized now.
 - **Post-MVP:** starts only after the Phase 5 end-to-end MVP is complete.
@@ -68,4 +68,5 @@ Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orches
 - [x] Record formal Phase 3 acceptance.
 - [x] Implement Phase 4, the FastAPI gateway, and record its acceptance. Citation rendering closed the gap carried from Phase 3.
 - [x] Implement Phase 5, the Next.js frontend, and record its acceptance. CORS configured for the browser origin.
-- [ ] Reconcile the MVP gate wording before claiming the MVP milestone. The roadmap defines the MVP as phases 3-5, while the gate row in `AGENTS.md` also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8-12.
+- [x] Reconcile the MVP gate wording. The MVP is phases 3-5, and the gate row in `AGENTS.md` now matches this roadmap.
+- [x] **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, evidence in `docs/verification/`.

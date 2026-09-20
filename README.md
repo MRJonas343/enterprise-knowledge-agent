@@ -14,7 +14,9 @@ This repository is a portfolio project, and it is explicit about what works toda
 
 **Working end to end:** Terraform-managed Azure infrastructure, a version-controlled document corpus, synchronization to Blob Storage, a Blob-backed Foundry IQ knowledge base, a Foundry agent that answers with citations over MCP, a FastAPI gateway that exposes it with citations resolved as structured data, and a Next.js frontend that renders those citations as source links.
 
-**Not claimed:** the MVP milestone itself. The roadmap defines the MVP as phases 3-5, and all three are accepted. But the repository's own gate row also lists MCP/tool policy, observability, evaluation evidence and security acceptance, which are phases 8 to 12. So the honest statement is that the end-to-end path is complete and the operational evidence is not. Evaluations, observability, security hardening and prompt-injection defenses are later phases.
+**The MVP is complete.** The roadmap defines it as phases 3-5 — Foundry Agent Service, FastAPI and Next.js — and all three gates are accepted with dated evidence. The end-to-end path was verified with a live request carrying a browser origin.
+
+**Complete is not the same as production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, observability, CI/CD and SharePoint are phases 6-15 and remain unstarted. The MVP proves the path works; those phases would prove it can be operated.
 
 All five gates are formally accepted, with evidence, in [`docs/verification/`](docs/verification/).
 
@@ -290,4 +292,4 @@ The full sequence, dependencies and exit criteria are in [`docs/development-road
 
 ## License
 
-Not yet determined. Until a license is added, all rights are reserved by default.
+[MIT](LICENSE).
