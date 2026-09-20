@@ -81,3 +81,9 @@ variable "embedding_deployment_capacity" {
   type        = number
   default     = 50
 }
+
+variable "tracing_retention_days" {
+  description = "Retention for the Log Analytics workspace and Application Insights resource that store agent traces. Allowed values are 30, 60, 90, 120, 180, 270, 365, 550 or 730. Retention is what drives the cost of the tracing path."
+  type        = number
+  default     = 30
+}

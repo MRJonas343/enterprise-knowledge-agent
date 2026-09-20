@@ -52,3 +52,18 @@ output "search_endpoint" {
   description = "Azure AI Search endpoint that hosts the knowledge source and knowledge base"
   value       = "https://${azurerm_search_service.main.name}.search.windows.net"
 }
+
+output "application_insights_id" {
+  description = "Application Insights resource ID. This is the connection target when linking tracing to the Foundry project."
+  value       = azurerm_application_insights.tracing.id
+}
+
+output "application_insights_name" {
+  description = "Application Insights resource name, shown in the Foundry portal once connected"
+  value       = azurerm_application_insights.tracing.name
+}
+
+output "log_analytics_workspace_id" {
+  description = "Log Analytics workspace that backs Application Insights and stores the agent traces"
+  value       = azurerm_log_analytics_workspace.tracing.id
+}
