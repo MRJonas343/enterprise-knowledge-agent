@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 ARM_API_VERSION = "2025-10-01-preview"
 
-REQUIRED = ("project_resource_id", "app_insights_resource_id")
+REQUIRED = ("project_resource_id", "app_insights_resource_id", "app_insights_connection_string")
 
 
 def load_config() -> dict[str, str]:
@@ -43,6 +43,7 @@ def load_config() -> dict[str, str]:
     return {
         "project_resource_id": get("AZURE_PROJECT_RESOURCE_ID", "").rstrip("/"),
         "app_insights_resource_id": get("AZURE_APP_INSIGHTS_RESOURCE_ID", "").rstrip("/"),
+        "app_insights_connection_string": get("AZURE_APP_INSIGHTS_CONNECTION_STRING", ""),
         "connection_name": get("AZURE_TRACING_CONNECTION_NAME", "app-insights"),
     }
 
@@ -77,7 +78,21 @@ def main() -> int:
                     "category": "AppInsights",
                     "target": cfg["app_insights_resource_id"],
                     "isSharedToAll": True,
-                    "metadata": {"ApiType": "Azure"},
+                    # The connections API requires the connection string to
+                    # identify the Application Insights resource, even when the
+                    # runtime authenticates with the project managed identity.
+                    # It lands in metadata rather than credentials because the
+                    # auth type above is the identity, not a key. With local
+                    # authentication disabled on the resource, the string alone
+                    # cannot ingest telemetry: the Monitoring Metrics Publisher
+                    # role on the project identity is what authorises that.
+                    "metadata": {
+                        "ApiType": "Azure",
+                        "ResourceId": cfg["app_insights_resource_id"],
+                        "ApplicationInsightsConnectionString": cfg[
+                            "app_insights_connection_string"
+                        ],
+                    },
                 },
             },
             timeout=60,

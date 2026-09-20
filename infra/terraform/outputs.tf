@@ -67,3 +67,9 @@ output "log_analytics_workspace_id" {
   description = "Log Analytics workspace that backs Application Insights and stores the agent traces"
   value       = azurerm_log_analytics_workspace.tracing.id
 }
+
+output "application_insights_connection_string" {
+  description = "Application Insights connection string. The connections API requires it to identify the resource when the tracing connection is created, even though runtime ingestion authenticates with the project managed identity. Read it with terraform output -raw application_insights_connection_string."
+  value       = azurerm_application_insights.tracing.connection_string
+  sensitive   = true
+}
