@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Enterprise Knowledge Agent — Runtime Architecture",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/MRJonas343/enterprise-knowledge-agent",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "17600e4fd0e994964ec6b8299c92c7102ce6a564"
+    }
+  },
+  "components": [
+    {
+      "id": "corpus",
+      "type": "database",
+      "label": "Knowledge corpus",
+      "sublabel": "13 Markdown docs",
+      "tag": "source of truth",
+      "pos": [270, 30],
+      "size": [150, 64],
+      "sources": [{ "path": "docs/verification/phase-2-retrieval-acceptance.md", "line": 63 }]
+    },
+    {
+      "id": "sync",
+      "type": "backend",
+      "label": "Knowledge sync",
+      "sublabel": "sync_knowledge.py",
+      "tag": "verified",
+      "pos": [270, 140],
+      "size": [150, 64],
+      "sources": [{ "path": "src/scripts/sync_knowledge.py", "line": 144 }]
+    },
+    {
+      "id": "blob",
+      "type": "database",
+      "label": "Blob Storage",
+      "sublabel": "private container",
+      "tag": "keyless",
+      "pos": [500, 140],
+      "size": [150, 64],
+      "sources": [{ "path": "infra/terraform/storage.tf", "line": 2 }]
+    },
+    {
+      "id": "source",
+      "type": "cloud",
+      "label": "Knowledge source",
+      "sublabel": "azureBlob ingestion",
+      "tag": "preview",
+      "pos": [730, 140],
+      "size": [150, 64],
+      "sources": [{ "path": "src/scripts/deploy_knowledge_base.py", "line": 92 }]
+    },
+    {
+      "id": "search",
+      "type": "database",
+      "label": "Azure AI Search",
+      "sublabel": "index + ranker",
+      "tag": "verified",
+      "pos": [960, 140],
+      "size": [150, 64],
+      "sources": [{ "path": "infra/terraform/search.tf", "line": 2 }]
+    },
+    {
+      "id": "kb",
+      "type": "cloud",
+      "label": "Knowledge base",
+      "sublabel": "agentic retrieval",
+      "tag": "preview",
+      "pos": [960, 410],
+      "size": [150, 64],
+      "sources": [{ "path": "src/scripts/deploy_knowledge_base.py", "line": 115 }]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent Service",
+      "sublabel": "aurora-knowledge-agent",
+      "tag": "deployed",
+      "pos": [730, 410],
+      "size": [150, 64],
+      "sources": [{ "path": "src/scripts/deploy_agent.py", "line": 138 }]
+    },
+    {
+      "id": "client",
+      "type": "frontend",
+      "label": "Operator client",
+      "sublabel": "run_agent.py",
+      "tag": "local CLI",
+      "pos": [270, 410],
+      "size": [150, 64],
+      "sources": [{ "path": "src/enterprise_knowledge_agent/run_agent.py", "line": 87 }]
+    },
+    {
+      "id": "identity",
+      "type": "security",
+      "label": "Entra ID",
+      "sublabel": "managed identity",
+      "tag": "tenant-level",
+      "pos": [500, 30],
+      "size": [150, 60],
+      "sources": [{ "path": "infra/terraform/storage.tf", "line": 11 }]
+    },
+    {
+      "id": "models",
+      "type": "cloud",
+      "label": "Foundry models",
+      "sublabel": "gpt-5.4-mini + embeddings",
+      "tag": "preview",
+      "pos": [730, 280],
+      "size": [150, 60],
+      "sources": [{ "path": "infra/terraform/main.tf", "line": 59 }]
+    },
+    {
+      "id": "terraform",
+      "type": "backend",
+      "label": "Terraform",
+      "sublabel": "control plane only",
+      "tag": "infra as code",
+      "pos": [270, 280],
+      "size": [150, 60],
+      "sources": [{ "path": "infra/terraform/main.tf", "line": 2 }]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Git repository",
+      "wraps": ["corpus", "sync", "terraform", "client"],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "Microsoft Azure · canadacentral · rg-knowledge-agent-344",
+      "wraps": ["identity", "blob", "source", "search", "models", "kb", "agent"],
+      "pad": 24
+    },
+    {
+      "kind": "security-group",
+      "label": "Keyless data plane · no keys or connection strings",
+      "wraps": ["blob", "source", "search"],
+      "pad": 16
+    }
+  ],
+  "connections": [
+    { "from": "corpus", "to": "sync", "label": "13 docs", "labelDy": 24 },
+    { "from": "sync", "to": "blob", "label": "hash sync" },
+    { "from": "blob", "to": "source", "label": "azureBlob" },
+    { "from": "source", "to": "search", "label": "indexer" },
+    { "from": "search", "to": "kb", "label": "retrieval", "labelDy": 24 },
+    { "from": "kb", "to": "agent", "label": "MCP tool" },
+    { "from": "agent", "to": "client", "label": "cited answer" },
+    { "from": "identity", "to": "blob", "label": "managed identity", "variant": "dashed", "labelDy": 24 },
+    { "from": "models", "to": "agent", "label": "inference", "variant": "dashed", "labelDy": 24 },
+    { "from": "terraform", "to": "blob", "label": "provisions", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Primary Data Path",
+      "items": [
+        "Markdown in git is the source of truth; Blob holds the synchronized copy.",
+        "sync_knowledge.py skips unchanged files using a content_sha256 Blob metadata hash.",
+        "Foundry IQ generates the datasource, skillset, indexer and index; the agent answers only from retrieved chunks and cites the original Blob URLs."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Trust & Ownership",
+      "items": [
+        "Keyless throughout: storage sets shared_access_key_enabled = false and Azure AI Search sets local_authentication_enabled = false.",
+        "Terraform owns the Azure control plane; the deploy scripts own the data-plane objects Terraform cannot manage.",
+        "Citation URLs point at a private container, so a proxy or user-delegation SAS is required ahead of Phase 5."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Scope, Status & Evidence",
+      "items": [
+        "Scope: Phase 0-3 in canadacentral; Phases 4-5 (FastAPI gateway, Next.js UI) are not implemented and are omitted.",
+        "Verified 2026-09-19 per docs/verification/phase-2-retrieval-acceptance.md; formal Phase 3 acceptance is pending.",
+        "Preview: Foundry IQ agentic retrieval, azure-search-documents 12.1.0b2, Search REST 2026-08-01-preview."
+      ]
+    }
+  ]
+}
