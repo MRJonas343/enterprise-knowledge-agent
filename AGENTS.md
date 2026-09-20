@@ -63,7 +63,7 @@ The MVP is defined by the roadmap as phases 3 to 5, and that is what is complete
 
 The end-to-end path was verified with a live request carrying a browser origin: a question submitted through the frontend's own request path reached the gateway, the agent, and the knowledge base, and the returned citations rendered as source links.
 
-**Completing the MVP is not the same as being production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, observability, CI/CD and SharePoint are phases 6 to 15 and remain unstarted. The MVP proves the path works; those phases would prove it can be operated.
+**Completing the MVP is not the same as being production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, CI/CD and SharePoint are phases 6 to 15 and remain unstarted, and observability reaches only as far as the two narrow exceptions recorded below. The MVP proves the path works; those phases would prove it can be operated.
 
 Two limitations carried forward from Phase 5. The interactive browser flow was never driven in a real browser — requests were made from the frontend's own modules against a live gateway, which is close but not the same. And citation offsets are produced by a Python process and applied by JavaScript, so they would misalign if a non-BMP character ever entered an answer.
 
@@ -76,6 +76,16 @@ One piece of evaluation-adjacent work was explicitly authorized by the project o
 `tests/fixtures/grounding-probes.yaml` and `tests/run_probes.py` turn the four adversarial probes that Phase 2 and Phase 3 ran by hand into a repeatable regression check. They protect grounding against a prompt or retrieval-configuration change; they are not an evaluation suite. There is no groundedness scoring, no relevance metric, no regression fixture store and no latency or cost measurement, so Phase 11 remains unstarted.
 
 The probes are the canonical wording. Other documents should point to the fixture rather than restating the questions, because the same probe had drifted into three different phrasings across the acceptance records and the README.
+
+### Narrow exception: agent tracing
+
+One piece of observability work was explicitly authorized by the project owner before the boundary was superseded, and it is recorded here so it is not mistaken for a general opening of Phase 12.
+
+`infra/terraform/tracing.tf` provisions a Log Analytics workspace and an Application Insights resource, and `src/scripts/link_tracing.py` connects the second to the Foundry project. Agent runs are then traced and readable in the Foundry portal as spans: the tool call, the model call, their durations and their payloads.
+
+That is the agent's own trace and nothing more. There are no metrics, no logs, no correlation identifiers across service boundaries, no alerting and no redaction policy, so Phase 12 remains unstarted.
+
+The tracing path is keyless: local authentication is disabled on both resources, the project identity publishes through `Monitoring Metrics Publisher`, and reading the tool payloads needs `Privileged Monitoring Data Reader`. The project connections API nevertheless requires the Application Insights connection string to identify its target, so the script supplies one. It identifies and does not authenticate.
 
 ## Source-of-Truth Precedence
 

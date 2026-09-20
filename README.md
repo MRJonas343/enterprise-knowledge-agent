@@ -16,7 +16,7 @@ This repository is a portfolio project, and it is explicit about what works toda
 
 **The MVP is complete.** The roadmap defines it as phases 3-5 — Foundry Agent Service, FastAPI and Next.js — and all three gates are accepted with dated evidence. The end-to-end path was verified with a live request carrying a browser origin.
 
-**Complete is not the same as production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, observability, CI/CD and SharePoint are phases 6-15 and remain unstarted. The MVP proves the path works; those phases would prove it can be operated.
+**Complete is not the same as production-ready.** Operational MCP tools, prompt-injection defenses, security hardening, evaluations, CI/CD and SharePoint are phases 6-15 and remain unstarted, and observability reaches only as far as the agent's own traces. The MVP proves the path works; those phases would prove it can be operated.
 
 All five gates are formally accepted, with evidence, in [`docs/verification/`](docs/verification/).
 
@@ -104,6 +104,24 @@ Here is that answer in the Foundry playground. The numbered markers are the cita
 ![The agent answering the flagship question, with mcp_list_tools against the knowledge-base server](assets/Portal-Agent-Test_Retrieval.png)
 
 **Reproducibility, stated honestly.** Agentic retrieval is not deterministic. Three claims appeared in every recorded run: the synchronous 2 second timeout, the absent circuit breaker, and the INC-2026-002 root cause. Others varied — the 80% alert threshold appeared in two of three runs, and the p95 and error-rate figures in one or two. The per-pod pool size of 50 connections is documented in the corpus, but the agent's answer never states that number, so it is not claimed here as an answer fact. The acceptance records carry the per-run detail.
+
+---
+
+## Tracing
+
+Every agent run is traced. Foundry writes the run as spans into the Application Insights resource that `infra/terraform/tracing.tf` provisions, and the Foundry portal renders the trajectory: the tool call, the model call, their durations, and the exact payloads that crossed between them.
+
+![The Foundry trace of one agent run, showing the knowledge base tool call and the model call as spans](assets/Tracing-aurora-agent.png)
+
+That run is three spans over 7.7 seconds: the agent invocation, a 4.89 second retrieval call, and a 2.31 second model call. Expanding the tool span shows what the agent sent — the question, passed verbatim as a single `query_variants` entry rather than decomposed — and what it received: `Retrieved 8 documents`, each with its Blob URL. It is the same retrieval whose citations appear in the answer above.
+
+The path stays keyless by design:
+
+- Application Insights runs with local authentication disabled, so no instrumentation key can ingest telemetry.
+- The Foundry project's managed identity publishes the traces through `Monitoring Metrics Publisher`.
+- Reading the GenAI content, which is where the tool payloads live, needs `Privileged Monitoring Data Reader`.
+
+One string is unavoidable. The project connections API requires the Application Insights connection string to identify the target resource when the connection is created, so `src/scripts/link_tracing.py` supplies it. It identifies; it does not authenticate, and with local authentication disabled it cannot ingest anything on its own.
 
 ---
 

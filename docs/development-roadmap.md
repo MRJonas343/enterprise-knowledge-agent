@@ -60,3 +60,8 @@ Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orches
 ## Work Record
 
 Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). Phases 6-15 remain unstarted and gated on an explicit supersession of the current boundary.
+
+Two narrow exceptions were explicitly authorized by the project owner before that supersession, and neither opens its phase:
+
+- **Grounding probes** — the four adversarial probes became a repeatable fixture (`tests/fixtures/grounding-probes.yaml`). No scoring and no metrics, so Phase 11 stays unstarted.
+- **Agent tracing** — a Log Analytics workspace, an Application Insights resource and the connection that links them to the Foundry project. Agent runs are readable in the Foundry portal as spans. No metrics, logs, correlation, alerting or redaction, so Phase 12 stays unstarted.
