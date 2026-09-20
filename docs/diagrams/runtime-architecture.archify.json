@@ -9,7 +9,7 @@
       "url": "https://github.com/MRJonas343/enterprise-knowledge-agent",
       "provider": "github",
       "link_mode": "web",
-      "revision": "17600e4fd0e994964ec6b8299c92c7102ce6a564"
+      "revision": "56497a262202e9e9a12d956f1367487531ea5521"
     }
   },
   "components": [
@@ -180,7 +180,7 @@
       "title": "Scope, Status & Evidence",
       "items": [
         "Scope: the deployed Azure path through Phase 3 in canadacentral; the Phase 4 FastAPI gateway and Phase 5 Next.js UI run as local processes and are omitted.",
-        "Verified 2026-09-19; phases 2 and 3 accepted, evidence in docs/verification/.",
+        "Verified 2026-09-19; phases 0-5 accepted and the MVP complete, evidence in docs/verification/.",
         "Preview: Foundry IQ agentic retrieval, azure-search-documents 12.1.0b2, Search REST 2026-08-01-preview."
       ]
     }
