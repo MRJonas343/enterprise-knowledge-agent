@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent, the API gateway and the Next.js frontend are implemented, and the Phase 2, 3, 4, 5, 9 and 13 gates are recorded in [`verification/`](verification/).
+This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent, the API gateway and the Next.js frontend are implemented, and the Phase 2, 3, 4, 5, 9, 11 and 13 gates are recorded in [`verification/`](verification/).
 
 ## Quick Path
 
@@ -17,7 +17,7 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 
 ## Current Status
 
-Phases 0-9 and Phase 13 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19 and **Phase 9, Security**, was accepted on 2026-09-20; **Phase 13, CI/CD**, was accepted the same day. Phases 11 and 12 (evaluations and observability) remain unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
+Phases 0-9, 11 and 13 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19; **Phase 9, Security**, and **Phase 11, Evaluations**, were accepted on 2026-09-20, and **Phase 13, CI/CD**, was accepted the same day. Phase 12 (observability) remains unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
 
 ## Reading Order
 
@@ -36,7 +36,7 @@ Phases 0-9 and Phase 13 are accepted and the MVP is complete. The MVP gates clea
 | `project-context.md` | Durable product brief | Product intent and target context |
 | `architecture/README.md` | Architecture index and MVP data path | Maintained; path implemented and accepted |
 | `adr/` | Durable decisions and assumptions | Initial decisions documented |
-| `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19; Phases 9 and 13 accepted 2026-09-20 |
+| `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19; Phases 9, 11 and 13 accepted 2026-09-20 |
 | `diagrams/` | Diagram evidence and ownership rules | Index only |
 
 ## Contribution Rule

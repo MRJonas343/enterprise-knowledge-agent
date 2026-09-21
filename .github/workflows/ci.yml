@@ -1,3 +1,27 @@
+# Continuous integration for the Enterprise Knowledge Agent.
+#
+# Three independent jobs, so a failure names the layer that broke:
+#   * python    - install uv, `uv sync --frozen`, then pytest
+#   * frontend  - install Node, `npm ci`, then eslint, vitest and a build
+#   * terraform - `fmt -check`, `init -backend=false`, then `validate`
+#
+# What this workflow does NOT cover, deliberately:
+#   * There is no `terraform plan` gate. Planning needs the Terraform state, and
+#     the state is local: it lives in one git-ignored file on the operator's
+#     machine. CI has no state, so a plan here would propose creating every
+#     resource from scratch, which is worse than no plan at all. Planning stays a
+#     local step. Do not read a green run as "the plan is safe".
+#   * No deployment, no environment promotion and no artifact provenance.
+#     Nothing is packaged or deployed, so there is nothing to promote, approve
+#     or trace back to a commit.
+#   * No evaluation or grounding probes: those need live Azure.
+#   * The workflow only reads the repository. It holds no secrets and writes
+#     nothing back, so `permissions` stays at `contents: read`.
+#
+# Action tags are pinned deliberately. `astral-sh/setup-uv` stopped publishing
+# moving major tags at v8.0.0 as a supply-chain measure, so `@v10` does not
+# exist; it is pinned to the immutable release tag instead.
+
 name: CI
 
 on:

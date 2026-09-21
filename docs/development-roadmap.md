@@ -1,6 +1,6 @@
 # Development Roadmap
 
-This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9 and Phase 13 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day; Phase 13, CI/CD, was accepted on 2026-09-20. Phases 11 and 12 remain unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired.**
+This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9, 11 and 13 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day; Phase 11, Evaluations, and Phase 13, CI/CD, were accepted on 2026-09-20. Phase 12 remains unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired.**
 
 ## Status Legend
 
@@ -18,9 +18,9 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | Infrastructure and knowledge source | 1 | Terraform-managed Azure resources, the Blob source, synchronization, and the Blob-backed Foundry IQ Knowledge Base are configured reproducibly. |
 | Retrieval acceptance | 2 | Retrieval quality, citations, exact source IDs, semantic queries, and multi-document retrieval pass the hard acceptance criteria. |
 | MVP | 3-5 | Foundry Agent Service, FastAPI, and Next.js provide a working end-to-end grounded user path. MVP is complete only after this path works. |
-| Post-MVP | 11-12 | Evaluations and observability are production-shaped. |
+| Post-MVP | 12 | Observability is production-shaped. |
 
-**Phases 11 and 12 are post-MVP; Phases 6, 7, 8, 10, 14 and 15 are retired. The post-MVP boundary was superseded on 2026-09-20, Phases 9 and 13 are now accepted, no post-MVP boundary is currently active, and every remaining post-MVP phase stays unstarted until it is explicitly selected.**
+**Phase 12 is post-MVP; Phases 6, 7, 8, 10, 14 and 15 are retired. The post-MVP boundary was superseded on 2026-09-20, Phases 9, 11 and 13 are now accepted, no post-MVP boundary is currently active, and every remaining post-MVP phase stays unstarted until it is explicitly selected.**
 
 ## Phase Sequence
 
@@ -37,7 +37,7 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | 8 MCP | Governed MCP exposure for approved operational tools, including server boundaries, schemas, authorization, timeouts, and failure handling. MCP is not a substitute for Foundry IQ retrieval. | Phase 7; Phase 9 security direction may constrain rollout | MCP tool behavior is interoperable, policy-controlled, observable, and tested without broadening the approved tool set implicitly. | **Retired 2026-09-20.** MCP would only expose the retired operational tools, adding an indirection layer over retrieval that Foundry IQ already performs. See the Work Record. |
 | 9 Security | Identity boundaries, least privilege, secrets handling, and threat-model follow-through. | Phase 5 MVP completion | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **Accepted 2026-09-20**: evidence in [`docs/verification/phase-9-security-acceptance.md`](verification/phase-9-security-acceptance.md) |
 | 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Retired 2026-09-20.** The guardrail covers direct injection and the indirect path is bounded by the agent having one read-only tool, while the platform control for retrieved content is not verifiable through this retrieval path; the threat stays in scope as a Phase 11 evaluation criterion. See the Work Record. |
-| 11 Evaluations | Deterministic evaluations over the local corpus: groundedness, by checking that the documents an answer cites actually support its claims; citation correctness; prompt-injection canaries; latency and token use; all with regression baselines. Relevance scoring and any LLM judge are out of scope. | Phase 9; the Phase 2 retrieval baseline and the version-controlled corpus | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **In progress.** A deterministic harness exists: `tests/run_evaluations.py`, `tests/eval_checks.py` and `tests/fixtures/evaluation-cases.yaml`. No baseline run has been recorded, so the gate is not met. |
+| 11 Evaluations | Deterministic evaluations over the local corpus: groundedness, by checking that the documents an answer cites actually support its claims; citation correctness; prompt-injection canaries; latency and token use; all with regression baselines. Relevance scoring and any LLM judge are out of scope. | Phase 9; the Phase 2 retrieval baseline and the version-controlled corpus | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Accepted 2026-09-20**: evidence in [`docs/verification/phase-11-evaluations-acceptance.md`](verification/phase-11-evaluations-acceptance.md). Nine of ten cases pass; the one failure is recorded in the record. |
 | 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval and citation events across the approved runtime path with sensitive-data redaction. | Phase 9, 11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
 | 13 CI/CD | A validation pipeline that runs on every push and pull request: Python tests, frontend lint, tests and build, and Terraform format and validate. | Phase 1 Terraform conventions | Changes are validated automatically before merge, a failure names the layer that broke, and the pipeline needs no credentials and holds no write access. | **Accepted 2026-09-20**: evidence in [`docs/verification/phase-13-cicd-acceptance.md`](verification/phase-13-cicd-acceptance.md) |
 | 14 Advanced infrastructure hardening | Production reliability, retries, timeouts, idempotent synchronization, backpressure, health checks, recovery, capacity, and controlled failure handling. | Phase 9-13; Phase 1 resource and source conventions | Failure modes, recovery, capacity, and operational runbooks are tested without corrupting source state or weakening governance. | **Retired 2026-09-20.** It is operational maturity for real load — retries, backpressure, capacity and recovery — none of which this project has. See the Work Record. |
@@ -52,7 +52,7 @@ The implementation order is not interchangeable:
 3. Prove retrieval quality and citation correctness in Phase 2, including exact IDs, semantic queries, and multi-document retrieval.
 4. Stop and record the hard Phase 2 retrieval acceptance gate.
 5. Only then begin Phase 3 Foundry Agent MVP, Phase 4 FastAPI, and Phase 5 Next.js; the MVP completes only when the end-to-end path works.
-6. Only after the MVP may the remaining post-MVP phases proceed: Phase 11 evaluations and Phase 12 observability. Phase 13 CI/CD is accepted, and Phases 6, 7, 8, 10, 14 and 15 are retired and are no longer part of the sequence.
+6. Only after the MVP may the remaining post-MVP phase proceed: Phase 12 observability. Phase 11 evaluations and Phase 13 CI/CD are accepted, and Phases 6, 7, 8, 10, 14 and 15 are retired and are no longer part of the sequence.
 
 Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orchestration, ranking, chunking, query routing, or citation assembly is out of scope unless a verified gap is documented and an ADR is accepted.
 
@@ -71,7 +71,7 @@ Phase 9 hardens the surface that already exists. Three items from its original r
 
 Two narrow exceptions were explicitly authorized by the project owner before that supersession, and neither opens its phase:
 
-- **Grounding probes** — the four adversarial probes became a repeatable fixture (`tests/fixtures/grounding-probes.yaml`). No scoring and no metrics, so Phase 11 stays unstarted.
+- **Grounding probes** — the four adversarial probes became a repeatable fixture (`tests/fixtures/grounding-probes.yaml`). No scoring and no metrics, so the exception did not open Phase 11.
 - **Agent tracing** — a Log Analytics workspace, an Application Insights resource and the connection that links them to the Foundry project. Agent runs are readable in the Foundry portal as spans. No metrics, logs, correlation, alerting or redaction, so Phase 12 stays unstarted.
 
 ### Second roadmap trimming (2026-09-20)
@@ -99,3 +99,11 @@ Four items from the original row were not applicable, not deferred:
 - **Artifact provenance.** Nothing is packaged or deployed — no Dockerfile, no compose file, no deployment manifest — so there is no artifact to attest.
 - **Environment promotion.** There is one environment, the operator's machine, with nothing to promote between.
 - **Controlled deployment approvals.** Nothing is deployed, so an approval gate would guard nothing.
+
+### Phase 11 evaluations (2026-09-20)
+
+Phase 11 was accepted on 2026-09-20; the evidence is in [`docs/verification/phase-11-evaluations-acceptance.md`](verification/phase-11-evaluations-acceptance.md). It was delivered as Tier 1, deterministic evaluation, with no LLM judge and no `azure-ai-evaluation` dependency: for every value an answer asserts, the harness checks whether the document the answer cited actually contains it. That is possible because the corpus is version-controlled and local, so a value that is present only in an uncited document is detectable without a model.
+
+The harness is `tests/run_evaluations.py` with pure checkers in `tests/eval_checks.py`, ten fixture cases in `tests/fixtures/evaluation-cases.yaml`, and 42 unit tests in `tests/test_eval_checks.py`. `tests/run_probes.py` was reduced to a thin wrapper over the shared runner, with its CLI and JSON output unchanged. The baseline committed as `tests/baseline.json` recorded 9 of 10 cases passing, 4 302 ms to 8 584 ms per case, and roughly 61 500 input and 1 270 output tokens across the ten cases.
+
+The one failure, `runbook-index-command`, is a real defect recorded rather than fixed or deleted: the answer is correct and grounded, but it cites two documents that do not contain the index name, which appears only in `runbooks/database-latency.md`. The detail is in the acceptance record. Two experiments the harness enables — the Phase 6 retrieval reasoning-effort comparison and the Phase 10 poisoned-document case — remain unrun because both are operational rather than code.

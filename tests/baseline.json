@@ -1,0 +1,486 @@
+{
+  "agent": "aurora-knowledge-agent",
+  "passed": false,
+  "summary": {
+    "passed": 9,
+    "total": 10
+  },
+  "cases": [
+    {
+      "id": "payment-pool-size",
+      "question": "What is the PostgreSQL connection pool size for payment-service?",
+      "answer": "The PostgreSQL connection pool size for `payment-service` is **50 connections per pod**.\u30105:1\u2020source\u3011\u30105:4\u2020source\u3011\n\nIf you want, I can also pull the related pooling alert threshold and the runbook for pool exhaustion.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/payment-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-002.md"
+      ],
+      "latency_ms": 8584,
+      "usage_details": {
+        "input_token_count": 6627,
+        "output_token_count": 94,
+        "total_token_count": 6721,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (architecture/payment-service.md, incidents/INC-2026-002.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 2 citation(s) resolve on disk"
+        },
+        {
+          "kind": "markers_match_spans",
+          "passed": true,
+          "reason": "2 span(s) and 2 marker(s) agree"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "checkout-payment-call",
+      "question": "How does checkout-api call payment-service, and what timeout applies to that call?",
+      "answer": "checkout-api calls `payment-service` synchronously over HTTPS as part of the checkout orchestration, specifically to `POST /v1/payments/authorize`\u30105:4\u2020source\u3011\u30105:2\u2020source\u3011. The timeout for that call is **2 seconds**, and there is **no circuit breaker** on the dependency\u30105:5\u2020source\u3011\u30105:2\u2020source\u3011.\n\nOperationally, this means a slow `payment-service` directly blocks checkout requests and can raise checkout latency and errors\u30105:4\u2020source\u3011\u30105:1\u2020source\u3011.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/checkout-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/system-overview.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/payment-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/system-overview.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/checkout-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-002.md"
+      ],
+      "latency_ms": 5442,
+      "usage_details": {
+        "input_token_count": 6334,
+        "output_token_count": 162,
+        "total_token_count": 6496,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 2 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (architecture/checkout-service.md, architecture/system-overview.md, architecture/payment-service.md, incidents/INC-2026-002.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 6 citation(s) resolve on disk"
+        },
+        {
+          "kind": "markers_match_spans",
+          "passed": true,
+          "reason": "6 span(s) and 6 marker(s) agree"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "incident-001-duration",
+      "question": "How long did INC-2026-001 last, and what triggered it?",
+      "answer": "INC-2026-001 lasted **18 minutes**. The incident report says the timeline ran from the Redis planned maintenance/failover beginning at **09:02 UTC** to resolution at **09:30 UTC**, with the incident itself summarized as lasting 18 minutes\u30105:0\u2020source\u3011.\n\nIt was triggered by a **planned maintenance window on Azure Cache for Redis** that caused a **primary failover**. During that failover, `authentication-service` could not perform session lookups, which led to token validation failures and HTTP 401 responses\u30105:0\u2020source\u3011. The runbook describes this exact trigger as a Redis failover detected by Azure Monitor\u30105:7\u2020source\u3011.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-001.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-001.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/runbooks/redis-failure.md"
+      ],
+      "latency_ms": 4702,
+      "usage_details": {
+        "input_token_count": 6245,
+        "output_token_count": 191,
+        "total_token_count": 6436,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (incidents/INC-2026-001.md, runbooks/redis-failure.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 3 citation(s) resolve on disk"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "incident-003-cpu",
+      "question": "What CPU level did payment-service reach during INC-2026-003?",
+      "answer": "During INC-2026-003, payment-service CPU reached **95% sustained across the affected pods**; the incident timeline says CPU hit **95% at 11:50 UTC** and remained at that level for **22 minutes**\u30105:0\u2020source\u3011.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-003.md"
+      ],
+      "latency_ms": 5806,
+      "usage_details": {
+        "input_token_count": 5941,
+        "output_token_count": 101,
+        "total_token_count": 6042,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (incidents/INC-2026-003.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 1 citation(s) resolve on disk"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "runbook-pool-threshold",
+      "question": "At what PgBouncer pool utilisation, sustained for how long, does the database latency runbook page the on-call engineer?",
+      "answer": "The database latency runbook pages the on-call engineer when **PgBouncer pool utilisation stays above 80% for 5 minutes**\u30105:0\u2020source\u3011. The payment-service architecture doc states the same threshold and points to the runbook for diagnosis\u30105:1\u2020source\u3011.\n\n",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/runbooks/database-latency.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/payment-service.md"
+      ],
+      "latency_ms": 4809,
+      "usage_details": {
+        "input_token_count": 6436,
+        "output_token_count": 115,
+        "total_token_count": 6551,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (runbooks/database-latency.md, architecture/payment-service.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 2 citation(s) resolve on disk"
+        },
+        {
+          "kind": "markers_match_spans",
+          "passed": true,
+          "reason": "2 span(s) and 2 marker(s) agree"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "runbook-index-command",
+      "question": "Which index does the database latency runbook create on the settlements table?",
+      "answer": "The runbook creates `idx_settlements_date_status` on `settlements (settlement_date, status)`\u30105:4\u2020source\u3011\u30105:6\u2020source\u3011",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/payment-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-003.md"
+      ],
+      "latency_ms": 5467,
+      "usage_details": {
+        "input_token_count": 6080,
+        "output_token_count": 80,
+        "total_token_count": 6160,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": false,
+          "reason": "cited document(s) missing: runbooks/database-latency.md"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": false,
+          "reason": "no cited document contains: idx_settlements_date_status (searched: architecture/payment-service.md, incidents/INC-2026-003.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 2 citation(s) resolve on disk"
+        }
+      ],
+      "passed": false
+    },
+    {
+      "id": "secrets-store-and-access",
+      "question": "Where does Aurora Commerce store its application secrets, and how do workloads read them?",
+      "answer": "Aurora Commerce stores application secrets in Azure Key Vault, specifically the production vault `kv-aurora-prod`\u30105:0\u2020source\u3011\u30105:3\u2020source\u3011.\n\nWorkloads read secrets at runtime using managed identity; the standard pattern is either the Key Vault provider for the Secrets Store CSI driver or the Azure Identity SDK, both using the pod\u2019s managed identity\u30105:0\u2020source\u3011\u30105:1\u2020source\u3011. Access is least-privilege: each AKS workload gets `get` only on the secrets it needs, scoped to `kv-aurora-prod`\u30105:0\u2020source\u3011.\n\nA few related guardrails are explicit:\n- No static Key Vault credentials, service principal passwords, or connection strings are mounted into pods\u30105:0\u2020source\u3011.\n- Secrets are not committed to code, baked into images, or set as literal Kubernetes values\u30105:1\u2020source\u3011.\n- Key Vault reads are audited\u30105:1\u2020source\u3011.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/architecture/authentication-service.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md"
+      ],
+      "latency_ms": 5517,
+      "usage_details": {
+        "input_token_count": 5842,
+        "output_token_count": 247,
+        "total_token_count": 6089,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (security/secrets-management.md, architecture/authentication-service.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 8 citation(s) resolve on disk"
+        },
+        {
+          "kind": "markers_match_spans",
+          "passed": true,
+          "reason": "8 span(s) and 8 marker(s) agree"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "secrets-rotation-interval",
+      "question": "What is the rotation interval for the NorthPay API credential?",
+      "answer": "The NorthPay API credential rotates every 90 days\u30105:0\u2020source\u3011.\n\nRelated context: the credential is stored in `kv-aurora-prod` and used by `payment-service` via managed identity\u30105:0\u2020source\u3011.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/security/secrets-management.md"
+      ],
+      "latency_ms": 4302,
+      "usage_details": {
+        "input_token_count": 6265,
+        "output_token_count": 93,
+        "total_token_count": 6358,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (security/secrets-management.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 2 citation(s) resolve on disk"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "rollback-reference-version",
+      "question": "Which payment-service version is the rollback reference target for INC-2026-002?",
+      "answer": "The rollback reference target for **INC-2026-002** was **payment-service v2.30.4**\u30105:0\u2020source\u3011\u30105:1\u2020source\u3011\u30105:6\u2020source\u3011",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/incidents/INC-2026-002.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/engineering/rollback-procedure.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/engineering/rollback-procedure.md"
+      ],
+      "latency_ms": 4370,
+      "usage_details": {
+        "input_token_count": 6016,
+        "output_token_count": 90,
+        "total_token_count": 6106,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (incidents/INC-2026-002.md, engineering/rollback-procedure.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 3 citation(s) resolve on disk"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "deployment-canary-traffic",
+      "question": "What share of traffic goes to a canary deployment, and for how long?",
+      "answer": "A canary deployment gets **5% of traffic for 10 minutes** before progressing to higher levels if healthy\u30105:0\u2020source\u3011\u30105:1\u2020source\u3011.\n\nIf you want, I can also summarize the full rollout sequence after the canary.",
+      "citations": [
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/engineering/deployment-guidelines.md",
+        "https://knowledgeagent343.blob.core.windows.net/enterprise-knowledge/engineering/deployment-guidelines.md"
+      ],
+      "latency_ms": 4846,
+      "usage_details": {
+        "input_token_count": 5683,
+        "output_token_count": 99,
+        "total_token_count": 5782,
+        "openai.cache_write_tokens": 0,
+        "cache_creation_input_token_count": 0,
+        "openai.cached_input_tokens": 0,
+        "cache_read_input_token_count": 0,
+        "openai.reasoning_tokens": 0,
+        "reasoning_output_token_count": 0
+      },
+      "checks": [
+        {
+          "kind": "answer_contains",
+          "passed": true,
+          "reason": "answer carries every expected value"
+        },
+        {
+          "kind": "cites_document",
+          "passed": true,
+          "reason": "all 1 expected document(s) cited"
+        },
+        {
+          "kind": "source_supports_claim",
+          "passed": true,
+          "reason": "every claim is present in the cited documents (engineering/deployment-guidelines.md)"
+        },
+        {
+          "kind": "citations_resolve",
+          "passed": true,
+          "reason": "all 2 citation(s) resolve on disk"
+        },
+        {
+          "kind": "markers_match_spans",
+          "passed": true,
+          "reason": "2 span(s) and 2 marker(s) agree"
+        }
+      ],
+      "passed": true
+    }
+  ]
+}
