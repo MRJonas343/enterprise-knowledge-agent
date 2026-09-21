@@ -1,6 +1,6 @@
 # Documentation Index
 
-This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent, the API gateway and the Next.js frontend are implemented, and the Phase 2, 3, 4 and 5 gates are recorded in [`verification/`](verification/).
+This directory is the working map for the Enterprise Knowledge Agent. The infrastructure, the knowledge corpus, the retrieval path, the Foundry agent, the API gateway and the Next.js frontend are implemented, and the Phase 2, 3, 4, 5 and 9 gates are recorded in [`verification/`](verification/).
 
 ## Quick Path
 
@@ -17,7 +17,7 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 
 ## Current Status
 
-Phases 0-5 are accepted and the MVP is complete as of 2026-09-19. The post-MVP boundary was superseded on 2026-09-20 for **Phase 9, Security**, which is in progress; phases 6 and 10-15 remain unstarted and phases 7-8 are retired. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
+Phases 0-9 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19 and **Phase 9, Security**, was accepted on 2026-09-20; phases 10-15 remain unstarted and phases 7-8 are retired. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
 
 ## Reading Order
 
@@ -36,7 +36,7 @@ Phases 0-5 are accepted and the MVP is complete as of 2026-09-19. The post-MVP b
 | `project-context.md` | Durable product brief | Product intent and target context |
 | `architecture/README.md` | Architecture index and MVP data path | Maintained; path implemented and accepted |
 | `adr/` | Durable decisions and assumptions | Initial decisions documented |
-| `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19 |
+| `verification/` | Dated gate acceptance records | Phases 2, 3, 4 and 5 accepted 2026-09-19; Phase 9 accepted 2026-09-20 |
 | `diagrams/` | Diagram evidence and ownership rules | Index only |
 
 ## Contribution Rule

@@ -1,6 +1,6 @@
 # Enterprise Knowledge Agent: Agent Contract
 
-This repository builds an Enterprise Knowledge Agent: grounded enterprise answers over governed knowledge, using Microsoft Foundry, Foundry IQ and Azure services. **Phases 0-5 are accepted and the MVP is complete: the infrastructure, the knowledge corpus, the synchronization path, cited retrieval, the Foundry agent, the FastAPI gateway and the Next.js frontend work end to end. The roadmap defines the MVP as phases 3-5, and all three gates are cleared.** The acceptance records are in [`docs/verification/`](docs/verification/).
+This repository builds an Enterprise Knowledge Agent: grounded enterprise answers over governed knowledge, using Microsoft Foundry, Foundry IQ and Azure services. **Phases 0-9 are accepted and the MVP is complete: the infrastructure, the knowledge corpus, the synchronization path, cited retrieval, the Foundry agent, the FastAPI gateway and the Next.js frontend work end to end. The roadmap defines the MVP as phases 3-5, and all three gates are cleared; Phase 9, Security, is accepted on top of them.** The acceptance records are in [`docs/verification/`](docs/verification/).
 
 ## Quick Path
 
@@ -51,19 +51,19 @@ Structure rules that must not drift:
 - The Git corpus is the source of truth. Documents are never edited directly in Azure.
 - Terraform owns control-plane resources only. Knowledge sources and knowledge bases are Azure AI Search data-plane objects and are created by the scripts in `src/scripts/`, never by Terraform or azapi.
 
-## Current Boundary: Phase 9 Security In Progress
+## Current Boundary: Phase 9 Accepted
 
-Phases 0 to 5 are accepted and the MVP is complete. All five gates were cleared on 2026-09-19; the evidence is in [`docs/verification/`](docs/verification/).
+Phases 0 to 9 are accepted and the MVP is complete. The MVP gates were cleared on 2026-09-19 and Phase 9 was accepted on 2026-09-20; the evidence is in [`docs/verification/`](docs/verification/).
 
-**The post-MVP boundary was explicitly superseded on 2026-09-20 by the project owner, who selected Phase 9, Security, as the next phase.** Post-MVP work is therefore authorized within Phase 9 and its prerequisites. Phases 6 and 10-15 remain unstarted. Phases 7 (dynamic operational tools) and 8 (MCP) were retired the same day: the agent's only tool is the knowledge base, executed server side by Foundry Agent Service, so neither would have a consumer.
+**The post-MVP boundary was explicitly superseded on 2026-09-20 by the project owner, who selected Phase 9, Security, as the next phase. Phase 9 is now accepted.** Phases 6 and 10-15 remain unstarted. Phases 7 (dynamic operational tools) and 8 (MCP) were retired the same day: the agent's only tool is the knowledge base, executed server side by Foundry Agent Service, so neither would have a consumer. No post-MVP boundary is currently active.
 
-Phase 9 depends only on Phase 5 MVP completion, the same single dependency Phase 6 carries. Retiring Phase 7 removed the only other prerequisite its row named, so the phase is now bounded entirely by what already exists: the gateway, the agent, the knowledge source and the credentials around them.
+Phase 9 depended only on Phase 5 MVP completion, the same single dependency Phase 6 carries. Retiring Phase 7 removed the only other prerequisite its row named, so the phase was bounded entirely by what already existed: the gateway, the agent, the knowledge source and the credentials around them.
 
 Phase 9 is deliberately narrower than its original roadmap row. Network and data controls, data retention and audit logging are out of scope, and the reasoning is recorded in the roadmap's Work Record. The short version: they are infrastructure-hardening concerns with no place in a portfolio-scale RAG demonstration, the network work would break the operator's local development path, and agent tracing gives a partial view of what the agent ran — though, being trace spans rather than an access log, no view of who asked.
 
 The end-to-end path was verified with a live request carrying a browser origin: a question submitted through the frontend's own request path reached the gateway, the agent, and the knowledge base, and the returned citations rendered as source links.
 
-**Completing the MVP is not the same as being production-ready.** Prompt-injection defenses, evaluations, CI/CD and SharePoint remain unstarted, and observability reaches only as far as the two narrow exceptions recorded below. Phase 9 is the first attempt to move from "the path works" toward "it can be operated".
+**Completing the MVP is not the same as being production-ready, and neither is completing Phase 9.** Prompt-injection defenses, evaluations, CI/CD and SharePoint remain unstarted, and observability reaches only as far as the two narrow exceptions recorded below. Phase 9 was the first move from "the path works" toward "it can be operated", and it is accepted only for the scope recorded in its verification note.
 
 One limitation carried forward from Phase 5, and one that was closed after it. Citation offsets are produced by a Python process and applied by JavaScript, so they would misalign if a non-BMP character ever entered an answer. The interactive browser flow, which the Phase 5 record left unverified, was subsequently driven by the project owner and works. That amendment is recorded in the Phase 5 acceptance record.
 
@@ -109,6 +109,7 @@ Preview or evolving Foundry IQ and Foundry APIs require a dated documentation ch
 | Phase 3 agent acceptance | Agent behaviour is verified against the accepted retrieval path, with service/API versions, citation preservation and failure behaviour documented. **Met 2026-09-19**: see [`docs/verification/phase-3-agent-acceptance.md`](docs/verification/phase-3-agent-acceptance.md) | Satisfied |
 | Phase 4 API acceptance | The gateway contract and integration checks cover successful grounded answers, missing context, service failure and citation preservation. **Met 2026-09-19**: see [`docs/verification/phase-4-api-acceptance.md`](docs/verification/phase-4-api-acceptance.md) | Satisfied |
 | Phase 5 frontend acceptance | A user can submit a question and inspect grounded citations through the API; the complete agent/API/UI path works without exposing secrets. **Met 2026-09-19**: see [`docs/verification/phase-5-frontend-acceptance.md`](docs/verification/phase-5-frontend-acceptance.md) | Satisfied |
+| Phase 9 security acceptance | Identity boundaries, least privilege, credential externalization and the guardrail are verified end to end, and every known risk has a control and a disposition. **Met 2026-09-20**: see [`docs/verification/phase-9-security-acceptance.md`](docs/verification/phase-9-security-acceptance.md) | Satisfied |
 | MVP gate | Foundry Agent Service, FastAPI and Next.js provide a working end-to-end grounded user path. The MVP is complete only once that path works. **Met 2026-09-19**: phases 3-5 accepted, evidence in [`docs/verification/`](docs/verification/) | Post-MVP expansion (phases 6-15) |
 
 Each gate needs a dated verification note or linked change record. A plan, mock, or unverified preview response is not acceptance evidence.
@@ -177,6 +178,6 @@ Each gate needs a dated verification note or linked change record. A plan, mock,
 
 ## Initial Handoff
 
-Current status: Phases 0-5 accepted on 2026-09-19 and the MVP is complete. The end-to-end path works and the acceptance records are in [`docs/verification/`](docs/verification/). Everything needed is in place: `enterprise-knowledge/` is the source corpus, `infra/terraform/` owns the Azure control plane, `src/scripts/` owns the data-plane objects, `src/enterprise_knowledge_agent/api.py` serves `POST /api/chat` and `GET /api/health`, and `frontend/` renders answers with citations resolved from span data. The interactive browser flow was subsequently driven by the project owner and works; see the amendment in the Phase 5 record. One caveat remains: citation offsets would misalign if a non-BMP character entered an answer.
+Current status: Phases 0-9 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19 and Phase 9, Security, was accepted on 2026-09-20, with evidence in [`docs/verification/phase-9-security-acceptance.md`](docs/verification/phase-9-security-acceptance.md). The end-to-end path works and the acceptance records are in [`docs/verification/`](docs/verification/). Everything needed is in place: `enterprise-knowledge/` is the source corpus, `infra/terraform/` owns the Azure control plane, `src/scripts/` owns the data-plane objects, `src/enterprise_knowledge_agent/api.py` serves `POST /api/chat` and `GET /api/health`, and `frontend/` renders answers with citations resolved from span data. The interactive browser flow was subsequently driven by the project owner and works; see the amendment in the Phase 5 record. One caveat remains: citation offsets would misalign if a non-BMP character entered an answer.
 
-Phase 9 (security) is in progress and is the only authorized post-MVP phase. Phases 6 and 10-15 remain unstarted, and phases 7-8 were retired. Two narrow exceptions are recorded above: the grounding probes and agent tracing. Phase 6 (retrieval optimisation) needs only the Phase 2 baseline and Phase 9 needs only Phase 5, so the next owner chooses between them rather than following the numbering blindly.
+Phase 9 (security) is accepted and its evidence is linked above; no post-MVP boundary is currently active. Phases 10-15 remain unstarted, and phases 7-8 were retired. Two narrow exceptions are recorded above: the grounding probes and agent tracing. Phase 6 (retrieval optimisation) needs only the Phase 2 baseline, so the next owner chooses it rather than following the numbering blindly.
