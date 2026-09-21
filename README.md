@@ -92,8 +92,6 @@ The agent produced a prioritised investigation plan whose citations resolved to 
 
 ![The agent answering the flagship question, with mcp_list_tools against the knowledge-base server](assets/Portal-Agent-Test_Retrieval.png)
 
-**Reproducibility, stated honestly.** Agentic retrieval is not deterministic. Three claims appeared in every recorded run: the synchronous 2 second timeout, the absent circuit breaker, and the INC-2026-002 root cause. Others varied — the 80% alert threshold appeared in two of three runs, and the p95 and error-rate figures in one or two. The per-run detail is in the acceptance records.
-
 ---
 
 ## Verified, with evidence
