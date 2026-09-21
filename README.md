@@ -94,20 +94,6 @@ The agent produced a prioritised investigation plan whose citations resolved to 
 
 ---
 
-## Verified, with evidence
-
-Every gate is either **accepted** with a dated record in [`docs/verification/`](docs/verification/), or deliberately **retired**.
-
-| Phase | Status |
-| --- | --- |
-| 0-2 Foundation, infrastructure, retrieval | Accepted |
-| 3-5 Agent, gateway, frontend | **Accepted 2026-09-19** — the MVP |
-| 9 Security | **Accepted 2026-09-20** |
-| 11 Evaluations | **Accepted 2026-09-20** |
-| 12 Observability | **Accepted 2026-09-20** |
-| 13 CI/CD | **Accepted 2026-09-20** |
-| 6, 7, 8, 10, 14, 15 | Retired — see the [roadmap](docs/development-roadmap.md) for the reason recorded against each |
-
 **Security.** Callers authenticate at the gateway with bearer tokens; it fails closed, a conversation can only be continued by the caller who opened it, and each caller has a quota. A Responsible AI guardrail sits on the model deployment, with harm categories at a medium threshold plus the binary jailbreak, profanity and protected-material filters. A blocked turn returns `400` with a plain explanation.
 
 ![The frontend answering a jailbreak attempt with the gateway's content-safety block](assets/Guardrails_in_action.png)
