@@ -78,6 +78,80 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
+
+def _configure_telemetry() -> None:
+    """Export the gateway's own request spans and metrics to Application Insights.
+
+    Exported: HTTP request spans and metrics for this FastAPI app. Not exported:
+    prompts, answers and retrieved documents. Those live behind the framework's
+    enable_sensitive_data flag, which is passed off below and must stay off; only
+    the agent's own trace can carry payloads, and only when that trace is read
+    through the privileged monitoring role.
+
+    Configuration is best effort. Telemetry is a side channel, so a missing
+    dependency, a bad connection string or an unreachable endpoint must never
+    stop the gateway from serving a request: the setup is wrapped as a whole and
+    a failure is logged and swallowed. That property matters more than any span.
+    """
+    # A real OpenTelemetry switch. The suite sets it in tests/conftest.py so that
+    # importing this module cannot configure real exporters from the developer's
+    # live .env and export telemetry while the tests run.
+    if os.environ.get("OTEL_SDK_DISABLED", "").strip().lower() in ("1", "true", "yes"):
+        return
+
+    connection_string = os.environ.get("AZURE_APP_INSIGHTS_CONNECTION_STRING", "").strip()
+    if not connection_string:
+        # A gateway with no telemetry is a normal state, not an error.
+        logging.info(
+            "AZURE_APP_INSIGHTS_CONNECTION_STRING is not set; gateway telemetry is off."
+        )
+        return
+
+    try:
+        # Imported here, not at module scope, so a missing optional dependency can
+        # never break importing this module.
+        from agent_framework.observability import configure_otel_providers
+        from azure.identity import DefaultAzureCredential
+        from azure.monitor.opentelemetry.exporter import (
+            AzureMonitorMetricExporter,
+            AzureMonitorTraceExporter,
+        )
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+        # A credential is required, not optional. Both tracing resources disable
+        # local authentication, so the connection string only identifies the
+        # target: it carries no key and the ingestion endpoint rejects it with
+        # 401. Entra ID is the only way in, which is the same keyless rule the
+        # rest of this repository follows.
+        credential = DefaultAzureCredential()
+
+        # Configured once here, at process start. FoundryAgent.configure_azure_monitor
+        # is async and per-instance and reads the connection string from the project
+        # client, so it cannot serve as the process-wide entry point this needs; the
+        # framework documents configure_otel_providers as the one startup call.
+        configure_otel_providers(
+            service_name="enterprise-knowledge-gateway",
+            enable_sensitive_data=False,
+            exporters=[
+                AzureMonitorTraceExporter(
+                    connection_string=connection_string, credential=credential
+                ),
+                AzureMonitorMetricExporter(
+                    connection_string=connection_string, credential=credential
+                ),
+            ],
+        )
+        FastAPIInstrumentor.instrument_app(app)
+    except Exception:
+        # Never re-raise: a gateway that cannot export telemetry still serves.
+        # The connection string is never logged, in whole or in part.
+        logging.exception(
+            "gateway telemetry could not be configured; continuing without it"
+        )
+
+
+_configure_telemetry()
+
 # In-memory store: conversations are lost when the process restarts. Each entry
 # records the owning caller next to the serialized session, so a conversation id
 # leaked to another caller cannot be used to resume it.
