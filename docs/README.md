@@ -17,7 +17,7 @@ This directory is the working map for the Enterprise Knowledge Agent. The infras
 
 ## Current Status
 
-Phases 0-5 are accepted and the MVP is complete as of 2026-09-19; phases 6-15 remain unstarted. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
+Phases 0-5 are accepted and the MVP is complete as of 2026-09-19. The post-MVP boundary was superseded on 2026-09-20 for **Phase 9, Security**, which is in progress; phases 6 and 10-15 remain unstarted and phases 7-8 are retired. [`development-roadmap.md`](development-roadmap.md) is the canonical phase status, and [`verification/`](verification/) holds the dated gate evidence.
 
 ## Reading Order
 

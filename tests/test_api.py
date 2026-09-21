@@ -9,11 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
 from agent_framework import AgentResponse, Content, Message
 from agent_framework._sessions import AgentSession
+from agent_framework_openai import OpenAIContentFilterException
+from azure.core.exceptions import HttpResponseError
 from azure.storage.blob import UserDelegationKey
 from fastapi.testclient import TestClient
 
@@ -127,6 +130,131 @@ def test_agent_failure_maps_to_502():
 def test_timeout_maps_to_504():
     response = _client(FakeAgent(error=asyncio.TimeoutError())).post("/api/chat", json={"message": "hi"})
     assert response.status_code == 504
+
+
+# --- Content safety blocks ---------------------------------------------------
+#
+# A blocked turn is an ordinary HTTP 400 whose body carries a content-filter
+# code. azure-core parses that body inside HttpResponseError.__init__, so a
+# response stub exposing status_code, reason and a callable text() is enough;
+# no transport or network is involved.
+
+CONTENT_FILTER_BODY = json.dumps(
+    {
+        "error": {
+            "code": "content_filter",
+            "message": (
+                "The response was filtered due to the prompt triggering "
+                "content management policy..."
+            ),
+            "param": "prompt",
+            "innererror": {
+                "code": "ResponsibleAIPolicyViolation",
+                "content_filter_result": {"hate": {"filtered": True, "severity": "high"}},
+            },
+        }
+    }
+)
+
+SAFETY_DETAIL = "Blocked by a content safety policy. Rephrase the question and try again."
+
+
+class _StubResponse:
+    """The minimum azure-core reads when building an HttpResponseError."""
+
+    def __init__(self, body: str, *, status_code: int = 400, reason: str = "Bad Request"):
+        self._body = body
+        self.status_code = status_code
+        self.reason = reason
+        self.headers: dict[str, str] = {}
+
+    def text(self) -> str:
+        return self._body
+
+
+class _StubError(Exception):
+    """An exception carrying whatever extra attributes a client would set."""
+
+    def __init__(self, message: str = "stub", **attributes: object) -> None:
+        super().__init__(message)
+        self.__dict__.update(attributes)
+
+
+def test_content_filter_block_maps_to_400():
+    error = HttpResponseError(message="blocked", response=_StubResponse(CONTENT_FILTER_BODY))
+
+    response = _client(FakeAgent(error=error)).post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": SAFETY_DETAIL}
+
+
+def test_content_filter_error_code_maps_to_400():
+    # The openai SDK shape: the code sits directly on the exception.
+    response = _client(FakeAgent(error=_StubError(code="content_filter"))).post(
+        "/api/chat", json={"message": "hi"}
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": SAFETY_DETAIL}
+
+
+def test_content_filter_error_wrapped_in_chain_maps_to_400():
+    # The client can raise through a wrapper, leaving the real error on the
+    # cause chain. __cause__ is a descriptor, so it must be set directly.
+    inner = _StubError(code="content_policy_violation")
+    outer = _StubError("wrapper")
+    outer.__cause__ = inner
+
+    response = _client(FakeAgent(error=outer)).post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 400
+
+
+def test_unrecognised_error_still_maps_to_502():
+    # A bare 400 with no content-filter signal is a real failure, not a block:
+    # the new branch must not swallow it.
+    error = _StubError("bad request", status_code=400, code="invalid_request")
+
+    response = _client(FakeAgent(error=error)).post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 502
+
+
+def test_openai_content_filter_exception_maps_to_400():
+    # This is the branch that actually fires in production. The Foundry chat
+    # client is a RawOpenAIChatClient subclass, and that client raises
+    # OpenAIContentFilterException -- not any of the three base classes the
+    # framework defines -- so the type-name match is what a blocked turn hits.
+    class StubBadRequest:
+        param = "prompt"
+        body = {
+            "innererror": {
+                "code": "ResponsibleAIPolicyViolation",
+                "content_filter_result": {"hate": {"filtered": True, "severity": "high"}},
+            }
+        }
+
+    error = OpenAIContentFilterException("blocked", StubBadRequest())
+
+    response = _client(FakeAgent(error=error)).post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": SAFETY_DETAIL}
+
+
+def test_content_filter_code_on_server_error_stays_502():
+    # A service failure wearing a filter code must not be reported as a caller
+    # error: a 500 whose body happens to carry content_filter is still breakage,
+    # and calling it a 400 would hide that from the operator.
+    error = HttpResponseError(
+        message="blocked",
+        response=_StubResponse(CONTENT_FILTER_BODY, status_code=500, reason="Internal Server Error"),
+    )
+
+    response = _client(FakeAgent(error=error)).post("/api/chat", json={"message": "hi"})
+
+    assert response.status_code == 502
 
 
 def test_conversation_reuse_and_new_conversation():

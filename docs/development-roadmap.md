@@ -1,6 +1,6 @@
 # Development Roadmap
 
-This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-5 are accepted and the MVP is complete as of 2026-09-19; phases 6-15 are unstarted and hard-gated behind an explicit supersession of the current boundary.**
+This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-5 are accepted and the MVP is complete as of 2026-09-19. The post-MVP boundary was superseded on 2026-09-20, when the project owner selected Phase 9, Security, as the active phase. The other post-MVP phases remain unstarted, except Phases 7 and 8, which are retired.**
 
 ## Status Legend
 
@@ -19,10 +19,10 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | Infrastructure and knowledge source | 1 | Terraform-managed Azure resources, the Blob source, synchronization, and the Blob-backed Foundry IQ Knowledge Base are configured reproducibly. |
 | Retrieval acceptance | 2 | Retrieval quality, citations, exact source IDs, semantic queries, and multi-document retrieval pass the hard acceptance criteria. |
 | MVP | 3-5 | Foundry Agent Service, FastAPI, and Next.js provide a working end-to-end grounded user path. MVP is complete only after this path works. |
-| Post-MVP | 6-14 | Retrieval optimization, tools, MCP, security, evaluations, observability, delivery, and infrastructure hardening are production-shaped. |
+| Post-MVP | 6, 9-14 | Retrieval optimization, security, evaluations, observability, delivery, and infrastructure hardening are production-shaped. Phases 7 and 8 (runtime tools and MCP) are retired. |
 | Late second source | 15 | SharePoint is introduced only after post-MVP governance, security, evaluation, and rollback evidence is accepted. |
 
-**Phase 6 onward is post-MVP. Phase 15 is deliberately late. No post-MVP work starts before the current boundary is explicitly superseded.**
+**Phase 6 onward is post-MVP. Phase 15 is deliberately late. The current boundary was superseded on 2026-09-20 for Phase 9 only; every other post-MVP phase stays unstarted until it is explicitly selected.**
 
 ## Phase Sequence
 
@@ -35,9 +35,9 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | 4 FastAPI Backend | Stable API boundary, request/response contracts, error mapping, and integration with the approved Foundry Agent path. | Phase 3 | Contract and integration checks cover successful grounded answers, missing context, service failure, and citation preservation. | **Accepted 2026-09-19**: evidence in `docs/verification/phase-4-api-acceptance.md` |
 | 5 Next.js Frontend | Next.js/TypeScript question-and-answer surface, citation inspection, loading and error states, and responsive behavior. | Phase 4 | A user can submit a question and inspect grounded citations through the API; the complete agent/API/UI path works without exposing secrets. This is the MVP completion gate. | **Accepted 2026-09-19**: evidence in `docs/verification/phase-5-frontend-acceptance.md` |
 | 6 Retrieval optimization | Measured improvements to retrieval quality, relevance, latency, and cost without replacing Foundry IQ or weakening citation and grounding guarantees. | Phase 5 MVP completion; Phase 2 regression baseline | Optimizations are measured against the accepted retrieval baseline and documented without regressing source identity, citations, or groundedness. | **Planned; post-MVP** |
-| 7 Dynamic operational tools | Explicitly approved operational tools, schemas, authorization boundaries, timeouts, auditability, and failure semantics. Tools are separate from the retrieval layer. | Phase 5 MVP completion; approved tool contracts and security inputs | Tool calls are schema-validated, denied by default, auditable, bounded, and covered by positive and negative tests. | **Planned; post-MVP** |
-| 8 MCP | Governed MCP exposure for approved operational tools, including server boundaries, schemas, authorization, timeouts, and failure handling. MCP is not a substitute for Foundry IQ retrieval. | Phase 7; Phase 9 security direction may constrain rollout | MCP tool behavior is interoperable, policy-controlled, observable, and tested without broadening the approved tool set implicitly. | **Planned; post-MVP** |
-| 9 Security | Identity boundaries, least privilege, network and data controls, secrets handling, retention, audit requirements, and threat-model follow-through. | Phase 5 MVP completion; operational-tool design from Phase 7 | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **In progress.** Boundary superseded 2026-09-20 by the project owner. Phase 7 is not started, so tool authorization is deferred and only the existing surface is hardened. |
+| 7 Dynamic operational tools | Explicitly approved operational tools, schemas, authorization boundaries, timeouts, auditability, and failure semantics. Tools are separate from the retrieval layer. | Phase 5 MVP completion; approved tool contracts and security inputs | Tool calls are schema-validated, denied by default, auditable, bounded, and covered by positive and negative tests. | **Retired 2026-09-20.** The agent's only tool is the knowledge base, executed server side by Foundry Agent Service, so a local operational-tool framework has no consumer. See the Work Record. |
+| 8 MCP | Governed MCP exposure for approved operational tools, including server boundaries, schemas, authorization, timeouts, and failure handling. MCP is not a substitute for Foundry IQ retrieval. | Phase 7; Phase 9 security direction may constrain rollout | MCP tool behavior is interoperable, policy-controlled, observable, and tested without broadening the approved tool set implicitly. | **Retired 2026-09-20.** MCP would only expose the retired operational tools, adding an indirection layer over retrieval that Foundry IQ already performs. See the Work Record. |
+| 9 Security | Identity boundaries, least privilege, secrets handling, and threat-model follow-through. | Phase 5 MVP completion | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **In progress.** Boundary superseded 2026-09-20 by the project owner. Network and data controls, data retention and audit logging are out of scope, and the reasoning is in the Work Record. Only the surface that already exists is hardened. |
 | 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Planned; post-MVP** |
 | 11 Evaluations | Repeatable groundedness, relevance, citation correctness, retrieval quality, tool safety, prompt-injection, latency, and cost evaluations with regression fixtures. | Phase 6-10; authorized synthetic or scrubbed fixtures | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Planned; post-MVP** |
 | 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval/citation/tool events across the approved runtime path with sensitive-data redaction. | Phase 9-11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
@@ -60,7 +60,16 @@ Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orches
 
 ## Work Record
 
-Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). **Post-MVP boundary superseded 2026-09-20**: the project owner selected Phase 9, Security, as the next phase.
+Phases 0-5 and the MVP are complete; the checklist that tracked them is retired. **MVP complete 2026-09-19**: phases 3, 4 and 5 accepted, with evidence in [`docs/verification/`](verification/). **Post-MVP boundary superseded 2026-09-20**: the project owner selected Phase 9, Security, as the next phase, which is the only authorized post-MVP phase.
+
+### Phase 9 scope decisions (2026-09-20)
+
+Phase 9 hardens the surface that already exists. Three items from its original row were trimmed by the project owner, and two phases were retired.
+
+- **Network and data controls — out of scope.** Private endpoints, firewall rules and IP restrictions are infrastructure-hardening work with no place in a portfolio-scale RAG demonstration, and they would break the operator's local development path. Removing them from Phase 9 does **not** mean the resources are network-restricted: the storage account, the search service and the Foundry project keep their default public network access. Nothing in this phase claims otherwise.
+- **Data retention — out of scope.** No soft-delete, retention policy or document lifecycle is added. Blob versioning stays enabled, but that is a recovery property, not a retention policy.
+- **Audit logging — deferred.** There is no persisted record of who asked what. Agent tracing does record the agent's own runs as spans in the Foundry portal, which partially covers this, but it is not an access audit trail: it carries no caller identity. It is also the Phase 12 exception recorded below, not a Phase 9 control.
+- **Phases 7 and 8 — retired.** The agent's only tool is the knowledge base and Foundry Agent Service executes it server side, so neither a local operational-tool framework nor an MCP layer would have a consumer. Retiring them also removed the "operational-tool design from Phase 7" dependency that Phase 9 previously carried.
 
 Two narrow exceptions were explicitly authorized by the project owner before that supersession, and neither opens its phase:
 

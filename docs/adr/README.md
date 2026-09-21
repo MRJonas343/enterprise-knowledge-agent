@@ -42,5 +42,5 @@ Do not invent implementation details in a stub. Mark unverified or preview-depen
 | [002](002-use-blob-storage-as-primary-knowledge-source.md) | Use Blob Storage as the primary knowledge source | Accepted |
 | [003](003-use-terraform-from-day-one.md) | Use Terraform from day one | Accepted |
 | [004](004-use-fastapi-as-application-gateway.md) | Use FastAPI as the application gateway | Accepted 2026-09-19 |
-| [005](005-use-mcp-for-runtime-tools.md) | Use MCP for governed runtime tools | Planned |
+| [005](005-use-mcp-for-runtime-tools.md) | Use MCP for governed runtime tools | Rejected 2026-09-20 |
 | [006](006-add-sharepoint-only-after-mvp.md) | Add SharePoint only after MVP | Accepted |

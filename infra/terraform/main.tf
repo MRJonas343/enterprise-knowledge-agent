@@ -9,7 +9,7 @@ locals {
   ai_project_name           = "${var.resource_prefix}-proj"
   llm_deployment_name       = "${var.resource_prefix}-llm-deploy"
   embedding_deployment_name = "${var.resource_prefix}-embed-deploy"
-  user_principal_id = var.user_object_id != "" ? var.user_object_id : data.azurerm_client_config.current.object_id
+  user_principal_id         = var.user_object_id != "" ? var.user_object_id : data.azurerm_client_config.current.object_id
 }
 
 
@@ -25,7 +25,7 @@ resource "azurerm_cognitive_account" "ai_foundry" {
     type = "SystemAssigned"
   }
 
-  custom_subdomain_name     = local.ai_foundry_name
+  custom_subdomain_name      = local.ai_foundry_name
   project_management_enabled = true
 
   tags = {
@@ -57,8 +57,9 @@ resource "azurerm_role_assignment" "foundry_user" {
 
 # LLM Model Deployment
 resource "azurerm_cognitive_deployment" "llm_model" {
-  name                = local.llm_deployment_name
+  name                 = local.llm_deployment_name
   cognitive_account_id = azurerm_cognitive_account.ai_foundry.id
+  rai_policy_name      = azapi_resource.guardrail.name
 
   sku {
     name     = "GlobalStandard"

@@ -185,6 +185,104 @@ def require_caller(request: Request) -> str:
     )
 
 
+# Codes the service uses when a Responsible AI policy blocks a turn. The two
+# spellings are the same refusal; both are observed in the wild.
+_CONTENT_FILTER_CODES = frozenset({"content_filter", "content_policy_violation"})
+
+# A refusal is a client-error response. A code that shows up on a 5xx or a 429
+# is a service failure wearing the same code, and must not be reported as a 400.
+_CONTENT_FILTER_STATUSES = frozenset({400, 403})
+
+# Azure marks a policy block in the inner error as well as in the outer code.
+_RESPONSIBLE_AI_INNER_CODE = "ResponsibleAIPolicyViolation"
+
+# The chain is one or two links in practice; a hard bound makes a cycle
+# impossible even if the visited-id guard below were ever wrong.
+_MAX_EXCEPTION_CHAIN = 10
+
+
+def _safe_getattr(obj: object, name: str) -> Any:
+    """Read an attribute, returning None if the read fails for any reason.
+
+    getattr with a default only swallows AttributeError. This runs while
+    classifying a failure, so a property that raises anything else must not be
+    able to turn the 400 this exists to produce into a 500.
+    """
+    try:
+        return getattr(obj, name, None)
+    except Exception:
+        return None
+
+
+def _is_content_filter_error(exc: BaseException) -> bool:
+    """Return True when exc is a content-safety block, not a real failure.
+
+    A blocked turn arrives as an ordinary HTTP 400 whose body carries a
+    content-filter code, so the client raises the same bad-request type it uses
+    for every other 4xx. Reporting that as a 502 would tell the caller the
+    gateway is broken when the caller's own message is what was refused. The
+    same code on a 5xx or a 429 is a service failure, not a refusal, and is left
+    alone.
+
+    The exception shape depends on which client raised it, and the real one may
+    be wrapped by another exception, so the __cause__/__context__ chain is
+    inspected. Every read is defensive on purpose: this runs while classifying a
+    failure, and raising here would turn the 400 this exists to produce back
+    into a 500.
+    """
+    seen: set[int] = set()
+    current: BaseException | None = exc
+
+    for _ in range(_MAX_EXCEPTION_CHAIN):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+
+        # The framework defines ContentFilterException types but raises none of
+        # them today. Matching by name catches them without importing them.
+        if type(current).__name__.endswith("ContentFilterException"):
+            return True
+
+        # The openai SDK shape: the code sits directly on the exception.
+        status = _safe_getattr(current, "status_code")
+        # A code alone is not enough. A 429 or a 500 whose body happens to carry
+        # a content-filter code is a service failure; reporting it as a 400 would
+        # hide breakage. Accept the code only when the status is absent, or is
+        # the client-error status a refusal actually uses.
+        status_is_refusal = status is None or status in _CONTENT_FILTER_STATUSES
+        code = _safe_getattr(current, "code")
+        if status_is_refusal and isinstance(code, str) and code in _CONTENT_FILTER_CODES:
+            return True
+
+        # The azure-core shape: the parsed ODataV4Format hangs off `error`.
+        error = _safe_getattr(current, "error")
+        if error is not None:
+            error_code = _safe_getattr(error, "code")
+            if status_is_refusal and isinstance(error_code, str) and error_code in _CONTENT_FILTER_CODES:
+                return True
+            inner = _safe_getattr(error, "innererror")
+            # azure-core parses innererror into a plain dict; tolerate an object
+            # too, in case another client hands the same shape back as a model.
+            inner_code = inner.get("code") if isinstance(inner, dict) else _safe_getattr(inner, "code")
+            if status_is_refusal and isinstance(inner_code, str) and inner_code == _RESPONSIBLE_AI_INNER_CODE:
+                return True
+
+        # Last resort, and deliberately narrow: a bare 400 or 403 is far too
+        # common to mean "blocked", so the documented policy wording must appear
+        # as well. str() on an exception is not guaranteed to succeed.
+        if status in (400, 403):
+            try:
+                text = str(current).lower()
+            except Exception:
+                text = ""
+            if "content management policy" in text:
+                return True
+
+        current = _safe_getattr(current, "__cause__") or _safe_getattr(current, "__context__")
+
+    return False
+
+
 def _check_rate_limit(caller: str) -> None:
     """Enforce a fixed-window request quota for one caller."""
     limit = int(os.environ.get("RATE_LIMIT_REQUESTS", "20"))
@@ -396,7 +494,16 @@ async def chat(
     except asyncio.TimeoutError:
         logging.exception("agent request timed out")
         raise HTTPException(status_code=504, detail="The agent request timed out.")
-    except Exception:
+    except Exception as exc:
+        if _is_content_filter_error(exc):
+            # 400, not 502: the caller's own input caused this and retrying the
+            # same message will not help. Log the caller, never the message —
+            # the blocked text is exactly what must not end up in a log.
+            logging.warning("content filter blocked a request from %s", caller)
+            raise HTTPException(
+                status_code=400,
+                detail="Blocked by a content safety policy. Rephrase the question and try again.",
+            )
         logging.exception("agent request failed")
         raise HTTPException(status_code=502, detail="The agent request failed.")
 
