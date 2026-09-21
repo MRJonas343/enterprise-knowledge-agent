@@ -197,42 +197,6 @@ The first two run in CI. The live suites do not, because CI has no credentials.
 
 ---
 
-## Design decisions
-
-Durable choices are recorded as ADRs in [`docs/adr/`](docs/adr/):
-
-- [001](docs/adr/001-use-foundry-iq.md) — Use Foundry IQ as the primary retrieval layer
-- [002](docs/adr/002-use-blob-storage-as-primary-knowledge-source.md) — Use Blob Storage as the primary knowledge source
-- [003](docs/adr/003-use-terraform-from-day-one.md) — Use Terraform from day one
-- [004](docs/adr/004-use-fastapi-as-application-gateway.md) — Use FastAPI as the application gateway
-- [005](docs/adr/005-use-mcp-for-runtime-tools.md) — Use MCP for governed runtime tools *(rejected; retired)*
-- [006](docs/adr/006-add-sharepoint-only-after-mvp.md) — Add SharePoint only after MVP *(rejected; retired)*
-
-Constraints learned the hard way:
-
-- **Agentic retrieval is regional.** It is not available everywhere, and several regions cannot create new Azure AI Search services at all due to capacity. `canadacentral` was chosen after verifying both.
-- **Model availability is per region.** `gpt-5-mini` is not offered in `canadacentral` under any deployment type.
-- **Foundry IQ preview objects need the preview SDK.** The stable `azure-search-documents` release does not expose the knowledge base surface at all.
-- **The MCP tool must reference the connection's ARM ID**, not its bare name, or the agent fails with `Connection resolution failed`.
-- **A severity threshold on a binary content filter disables it.** A jailbreak comes back as `{"detected": true, "filtered": false}` — annotated, never blocked. Azure's own policies declare binary filters without a threshold.
-- **The embedding model, container and network mode are immutable** once the knowledge source exists; changing them means recreating it and re-ingesting everything.
-
----
-
-## Known limitations
-
-Stated plainly, because a portfolio that hides its edges is not worth reading.
-
-- **Citations can be attributed to the wrong document.** The evaluation suite found a real case: the answer was correct, but cited two documents that discuss the subject without naming the specific index. Right answer, unsupported provenance. Recorded in the [Phase 11 acceptance](docs/verification/phase-11-evaluations-acceptance.md), not fixed.
-- **A caller cannot be identified from a trace.** The gateway's spans carry the route, status and duration, not who asked. There is no access audit trail.
-- **The gateway keeps conversations in memory.** They do not survive a restart, and the session store has no eviction. The rate limiter is per-process.
-- **The frontend token is readable by anyone who loads the page.** It authenticates against anonymous callers; it is not a secret from a browser user. A server-side proxy route is the correct fix.
-- **Two experiments have not been run**: comparing retrieval reasoning effort against the grounding probes, and the poisoned-document case. Both need the knowledge base rebuilt, so they are operational work rather than code.
-- **Citation offsets would misalign if a non-BMP character entered an answer.** The offsets are produced by Python and applied by JavaScript.
-- **Not production-ready.** No alerting, no dashboards, no capacity metrics, no deployment: CI validates but builds no artifact and deploys nothing.
-
----
-
 ## Repository layout
 
 ```text
