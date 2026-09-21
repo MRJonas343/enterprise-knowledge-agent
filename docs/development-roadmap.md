@@ -1,6 +1,6 @@
 # Development Roadmap
 
-This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day. Phases 11-13 remain unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired.**
+This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9 and Phase 13 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day; Phase 13, CI/CD, was accepted on 2026-09-20. Phases 11 and 12 remain unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired.**
 
 ## Status Legend
 
@@ -18,9 +18,9 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | Infrastructure and knowledge source | 1 | Terraform-managed Azure resources, the Blob source, synchronization, and the Blob-backed Foundry IQ Knowledge Base are configured reproducibly. |
 | Retrieval acceptance | 2 | Retrieval quality, citations, exact source IDs, semantic queries, and multi-document retrieval pass the hard acceptance criteria. |
 | MVP | 3-5 | Foundry Agent Service, FastAPI, and Next.js provide a working end-to-end grounded user path. MVP is complete only after this path works. |
-| Post-MVP | 11-13 | Evaluations, observability and delivery are production-shaped. |
+| Post-MVP | 11-12 | Evaluations and observability are production-shaped. |
 
-**Phases 11-13 are post-MVP; Phases 6, 7, 8, 10, 14 and 15 are retired. The post-MVP boundary was superseded on 2026-09-20 for Phase 9 only, and Phase 9 is now accepted; no post-MVP boundary is currently active, and every remaining post-MVP phase stays unstarted until it is explicitly selected.**
+**Phases 11 and 12 are post-MVP; Phases 6, 7, 8, 10, 14 and 15 are retired. The post-MVP boundary was superseded on 2026-09-20, Phases 9 and 13 are now accepted, no post-MVP boundary is currently active, and every remaining post-MVP phase stays unstarted until it is explicitly selected.**
 
 ## Phase Sequence
 
@@ -39,7 +39,7 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Retired 2026-09-20.** The guardrail covers direct injection and the indirect path is bounded by the agent having one read-only tool, while the platform control for retrieved content is not verifiable through this retrieval path; the threat stays in scope as a Phase 11 evaluation criterion. See the Work Record. |
 | 11 Evaluations | Repeatable groundedness, relevance, citation correctness, retrieval quality, prompt-injection, latency, and cost evaluations with regression fixtures. | Phase 9; the Phase 2 retrieval baseline and authorized synthetic or scrubbed fixtures | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Planned; post-MVP** |
 | 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval and citation events across the approved runtime path with sensitive-data redaction. | Phase 9, 11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
-| 13 CI/CD | Validation pipelines, Terraform plan gates, artifact provenance, environment promotion, and controlled deployment approvals. | Phase 1 Terraform conventions; the pipeline can be established before Phases 11-12 land, since its checks already exist, but promoting verified artifacts depends on them | Changes are reproducible across environments and promotion requires verified artifacts, checks, and approvals. | **In progress.** The validation pipeline — Python tests, frontend lint and tests, and Terraform format and validate — landed 2026-09-20 in `.github/workflows/ci.yml`. The plan gate, artifact provenance, environment promotion and deployment approvals are not started. |
+| 13 CI/CD | A validation pipeline that runs on every push and pull request: Python tests, frontend lint, tests and build, and Terraform format and validate. | Phase 1 Terraform conventions | Changes are validated automatically before merge, a failure names the layer that broke, and the pipeline needs no credentials and holds no write access. | **Accepted 2026-09-20**: evidence in [`docs/verification/phase-13-cicd-acceptance.md`](verification/phase-13-cicd-acceptance.md) |
 | 14 Advanced infrastructure hardening | Production reliability, retries, timeouts, idempotent synchronization, backpressure, health checks, recovery, capacity, and controlled failure handling. | Phase 9-13; Phase 1 resource and source conventions | Failure modes, recovery, capacity, and operational runbooks are tested without corrupting source state or weakening governance. | **Retired 2026-09-20.** It is operational maturity for real load — retries, backpressure, capacity and recovery — none of which this project has. See the Work Record. |
 | 15 SharePoint as a second source | Deliberately late SharePoint integration: verified connector/API behavior, permissions mapping, synchronization, citations, evaluation coverage, rollout, and rollback. | Phase 14; all applicable security, prompt-injection, evaluation, observability, and delivery evidence | SharePoint content is governed, permission behavior is tested, citations remain trustworthy, and rollout/rollback are documented. | **Retired 2026-09-20.** There is no demand for a second knowledge source, and it was the most expensive remaining item. See the Work Record. |
 
@@ -52,7 +52,7 @@ The implementation order is not interchangeable:
 3. Prove retrieval quality and citation correctness in Phase 2, including exact IDs, semantic queries, and multi-document retrieval.
 4. Stop and record the hard Phase 2 retrieval acceptance gate.
 5. Only then begin Phase 3 Foundry Agent MVP, Phase 4 FastAPI, and Phase 5 Next.js; the MVP completes only when the end-to-end path works.
-6. Only after the MVP may the remaining post-MVP phases proceed: Phase 11 evaluations, Phase 12 observability and Phase 13 CI/CD. Phases 6, 7, 8, 10, 14 and 15 are retired and are no longer part of the sequence.
+6. Only after the MVP may the remaining post-MVP phases proceed: Phase 11 evaluations and Phase 12 observability. Phase 13 CI/CD is accepted, and Phases 6, 7, 8, 10, 14 and 15 are retired and are no longer part of the sequence.
 
 Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orchestration, ranking, chunking, query routing, or citation assembly is out of scope unless a verified gap is documented and an ADR is accepted.
 
@@ -88,3 +88,14 @@ Two items were carried forward rather than dropped with their phases, and both n
 
 - **The Phase 6 retrieval experiment.** Compare the retrieval reasoning effort against the grounding probes and keep the cheapest setting that still passes.
 - **The Phase 10 injection threat.** A poisoned document must not change an answer, so it is recorded as a Phase 11 evaluation criterion.
+
+### Phase 13 scope and acceptance (2026-09-20)
+
+Phase 13 was trimmed to the one part that applies to this project and accepted on 2026-09-20; the evidence is in [`docs/verification/phase-13-cicd-acceptance.md`](verification/phase-13-cicd-acceptance.md). `.github/workflows/ci.yml` runs on every push and pull request across three jobs — Python tests, frontend lint, tests and build, and Terraform format and validate — and holds no credentials or write access.
+
+Four items from the original row were not applicable, not deferred:
+
+- **Terraform plan gate.** Planning needs the state, and the repository declares no `backend` block, so the state is one git-ignored file on the operator's machine. A CI plan would propose creating every resource from scratch. Declined deliberately: the real prerequisite, moving the state to a remote backend with a federated identity, was judged disproportionate.
+- **Artifact provenance.** Nothing is packaged or deployed — no Dockerfile, no compose file, no deployment manifest — so there is no artifact to attest.
+- **Environment promotion.** There is one environment, the operator's machine, with nothing to promote between.
+- **Controlled deployment approvals.** Nothing is deployed, so an approval gate would guard nothing.
