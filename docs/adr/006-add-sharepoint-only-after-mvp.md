@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Rejected 2026-09-20
 
 ## Context
 
@@ -23,3 +23,5 @@ These alternatives increase early integration and governance risk before the cor
 ## Consequences
 
 Blob Storage remains the primary source through MVP. SharePoint planning may be documented, but implementation and connector dependencies are blocked until the roadmap prerequisites and MVP acceptance are complete.
+
+Retired 2026-09-20: Phase 15 was retired when the remaining roadmap was reduced to evaluations, observability and CI/CD. SharePoint is not being added, so this deferral is never exercised. The decision it rests on still stands — Blob Storage is the primary source, and the alternatives below stay rejected.

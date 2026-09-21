@@ -1,15 +1,14 @@
 # Development Roadmap
 
-This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day. Phases 10-15 remain unstarted, except Phases 7 and 8, which are retired.**
+This roadmap is the staged implementation contract for the Enterprise Knowledge Agent. It preserves the requested order from foundation through the retrieval gate, then the end-to-end MVP, then post-MVP expansion. **Phases 0-9 are accepted and the MVP is complete. The MVP gates cleared on 2026-09-19, and Phase 9, Security, was selected on 2026-09-20 and accepted the same day. Phases 11-13 remain unstarted; Phases 6, 7, 8, 10, 14 and 15 are retired.**
 
 ## Status Legend
 
-- **In progress:** the boundary has been superseded for this phase and work is authorized.
+- **In progress:** work is authorized for this phase, either because the boundary was superseded for it or because it was explicitly selected.
 - **Accepted:** the phase gate is cleared and dated evidence is recorded in `docs/verification/`.
 - **Next:** authorized only after the preceding phase gate is accepted.
 - **Planned:** documented for sequencing, not authorized now.
 - **Post-MVP:** starts only after the Phase 5 end-to-end MVP is complete.
-- **Late:** intentionally deferred until after the rest of the roadmap.
 
 ## Milestone Gates
 
@@ -19,10 +18,9 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | Infrastructure and knowledge source | 1 | Terraform-managed Azure resources, the Blob source, synchronization, and the Blob-backed Foundry IQ Knowledge Base are configured reproducibly. |
 | Retrieval acceptance | 2 | Retrieval quality, citations, exact source IDs, semantic queries, and multi-document retrieval pass the hard acceptance criteria. |
 | MVP | 3-5 | Foundry Agent Service, FastAPI, and Next.js provide a working end-to-end grounded user path. MVP is complete only after this path works. |
-| Post-MVP | 6, 9-14 | Retrieval optimization, security, evaluations, observability, delivery, and infrastructure hardening are production-shaped. Phases 7 and 8 (runtime tools and MCP) are retired. |
-| Late second source | 15 | SharePoint is introduced only after post-MVP governance, security, evaluation, and rollback evidence is accepted. |
+| Post-MVP | 11-13 | Evaluations, observability and delivery are production-shaped. |
 
-**Phase 6 onward is post-MVP. Phase 15 is deliberately late. The post-MVP boundary was superseded on 2026-09-20 for Phase 9 only, and Phase 9 is now accepted; no post-MVP boundary is currently active, and every other post-MVP phase stays unstarted until it is explicitly selected.**
+**Phases 11-13 are post-MVP; Phases 6, 7, 8, 10, 14 and 15 are retired. The post-MVP boundary was superseded on 2026-09-20 for Phase 9 only, and Phase 9 is now accepted; no post-MVP boundary is currently active, and every remaining post-MVP phase stays unstarted until it is explicitly selected.**
 
 ## Phase Sequence
 
@@ -34,16 +32,16 @@ This roadmap is the staged implementation contract for the Enterprise Knowledge 
 | 3 Foundry Agent MVP | Foundry Agent Service integration for grounded interaction and conversation state, using Foundry IQ as the retrieval intelligence layer. | Phase 2 retrieval acceptance | Agent behavior is verified against the accepted retrieval path, with service/API versions, citation preservation, and failure behavior documented. | **Accepted 2026-09-19**: evidence in `docs/verification/phase-3-agent-acceptance.md` |
 | 4 FastAPI Backend | Stable API boundary, request/response contracts, error mapping, and integration with the approved Foundry Agent path. | Phase 3 | Contract and integration checks cover successful grounded answers, missing context, service failure, and citation preservation. | **Accepted 2026-09-19**: evidence in `docs/verification/phase-4-api-acceptance.md` |
 | 5 Next.js Frontend | Next.js/TypeScript question-and-answer surface, citation inspection, loading and error states, and responsive behavior. | Phase 4 | A user can submit a question and inspect grounded citations through the API; the complete agent/API/UI path works without exposing secrets. This is the MVP completion gate. | **Accepted 2026-09-19**: evidence in `docs/verification/phase-5-frontend-acceptance.md` |
-| 6 Retrieval optimization | Measured improvements to retrieval quality, relevance, latency, and cost without replacing Foundry IQ or weakening citation and grounding guarantees. | Phase 5 MVP completion; Phase 2 regression baseline | Optimizations are measured against the accepted retrieval baseline and documented without regressing source identity, citations, or groundedness. | **Planned; post-MVP** |
+| 6 Retrieval optimization | Measured improvements to retrieval quality, relevance, latency, and cost without replacing Foundry IQ or weakening citation and grounding guarantees. | Phase 5 MVP completion; Phase 2 regression baseline | Optimizations are measured against the accepted retrieval baseline and documented without regressing source identity, citations, or groundedness. | **Retired 2026-09-20.** Foundry IQ owns retrieval and the only real knob is a knowledge-base setting rather than code, and without the Phase 11 measurement harness an optimization cannot be shown to be an improvement; its single experiment carries forward into Phase 11. See the Work Record. |
 | 7 Dynamic operational tools | Explicitly approved operational tools, schemas, authorization boundaries, timeouts, auditability, and failure semantics. Tools are separate from the retrieval layer. | Phase 5 MVP completion; approved tool contracts and security inputs | Tool calls are schema-validated, denied by default, auditable, bounded, and covered by positive and negative tests. | **Retired 2026-09-20.** The agent's only tool is the knowledge base, executed server side by Foundry Agent Service, so a local operational-tool framework has no consumer. See the Work Record. |
 | 8 MCP | Governed MCP exposure for approved operational tools, including server boundaries, schemas, authorization, timeouts, and failure handling. MCP is not a substitute for Foundry IQ retrieval. | Phase 7; Phase 9 security direction may constrain rollout | MCP tool behavior is interoperable, policy-controlled, observable, and tested without broadening the approved tool set implicitly. | **Retired 2026-09-20.** MCP would only expose the retired operational tools, adding an indirection layer over retrieval that Foundry IQ already performs. See the Work Record. |
 | 9 Security | Identity boundaries, least privilege, secrets handling, and threat-model follow-through. | Phase 5 MVP completion | Security controls are evidenced, credentials remain externalized, protected content is denied safely, and governance risks have owners and mitigations. | **Accepted 2026-09-20**: evidence in [`docs/verification/phase-9-security-acceptance.md`](verification/phase-9-security-acceptance.md) |
-| 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Planned; post-MVP** |
-| 11 Evaluations | Repeatable groundedness, relevance, citation correctness, retrieval quality, tool safety, prompt-injection, latency, and cost evaluations with regression fixtures. | Phase 6-10; authorized synthetic or scrubbed fixtures | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Planned; post-MVP** |
-| 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval/citation/tool events across the approved runtime path with sensitive-data redaction. | Phase 9-11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
-| 13 CI/CD | Validation pipelines, Terraform plan gates, artifact provenance, environment promotion, and controlled deployment approvals. | Phase 11-12; Phase 1 Terraform conventions | Changes are reproducible across environments and promotion requires verified artifacts, checks, and approvals. | **Planned; post-MVP** |
-| 14 Advanced infrastructure hardening | Production reliability, retries, timeouts, idempotent synchronization, backpressure, health checks, recovery, capacity, and controlled failure handling. | Phase 9-13; Phase 1 resource and source conventions | Failure modes, recovery, capacity, and operational runbooks are tested without corrupting source state or weakening governance. | **Planned; post-MVP, before SharePoint** |
-| 15 SharePoint as a second source | Deliberately late SharePoint integration: verified connector/API behavior, permissions mapping, synchronization, citations, evaluation coverage, rollout, and rollback. | Phase 14; all applicable security, prompt-injection, evaluation, observability, and delivery evidence | SharePoint content is governed, permission behavior is tested, citations remain trustworthy, and rollout/rollback are documented. | **Planned; late second source** |
+| 10 Prompt-injection defenses | Threat-informed prompt-injection defenses for retrieved content, user input, tools, citations, and agent instructions. | Phase 9 security controls; accepted agent and tool surfaces | Injection cases are represented in authorized test fixtures, defenses fail safely, and mitigations do not silently bypass citations or authorization. | **Retired 2026-09-20.** The guardrail covers direct injection and the indirect path is bounded by the agent having one read-only tool, while the platform control for retrieved content is not verifiable through this retrieval path; the threat stays in scope as a Phase 11 evaluation criterion. See the Work Record. |
+| 11 Evaluations | Repeatable groundedness, relevance, citation correctness, retrieval quality, prompt-injection, latency, and cost evaluations with regression fixtures. | Phase 9; the Phase 2 retrieval baseline and authorized synthetic or scrubbed fixtures | Evaluation evidence is reproducible; known failures are tracked; changes are compared with baselines before release. | **Planned; post-MVP** |
+| 12 Observability | OpenTelemetry traces, metrics, logs, correlation, and useful retrieval and citation events across the approved runtime path with sensitive-data redaction. | Phase 9, 11; approved runtime and evaluation signals | Requests can be diagnosed across service boundaries without leaking prompts, documents, tokens, or personal data. | **Planned; post-MVP** |
+| 13 CI/CD | Validation pipelines, Terraform plan gates, artifact provenance, environment promotion, and controlled deployment approvals. | Phase 1 Terraform conventions; the pipeline can be established before Phases 11-12 land, since its checks already exist, but promoting verified artifacts depends on them | Changes are reproducible across environments and promotion requires verified artifacts, checks, and approvals. | **In progress.** The validation pipeline — Python tests, frontend lint and tests, and Terraform format and validate — landed 2026-09-20 in `.github/workflows/ci.yml`. The plan gate, artifact provenance, environment promotion and deployment approvals are not started. |
+| 14 Advanced infrastructure hardening | Production reliability, retries, timeouts, idempotent synchronization, backpressure, health checks, recovery, capacity, and controlled failure handling. | Phase 9-13; Phase 1 resource and source conventions | Failure modes, recovery, capacity, and operational runbooks are tested without corrupting source state or weakening governance. | **Retired 2026-09-20.** It is operational maturity for real load — retries, backpressure, capacity and recovery — none of which this project has. See the Work Record. |
+| 15 SharePoint as a second source | Deliberately late SharePoint integration: verified connector/API behavior, permissions mapping, synchronization, citations, evaluation coverage, rollout, and rollback. | Phase 14; all applicable security, prompt-injection, evaluation, observability, and delivery evidence | SharePoint content is governed, permission behavior is tested, citations remain trustworthy, and rollout/rollback are documented. | **Retired 2026-09-20.** There is no demand for a second knowledge source, and it was the most expensive remaining item. See the Work Record. |
 
 ## Strict Priority
 
@@ -54,7 +52,7 @@ The implementation order is not interchangeable:
 3. Prove retrieval quality and citation correctness in Phase 2, including exact IDs, semantic queries, and multi-document retrieval.
 4. Stop and record the hard Phase 2 retrieval acceptance gate.
 5. Only then begin Phase 3 Foundry Agent MVP, Phase 4 FastAPI, and Phase 5 Next.js; the MVP completes only when the end-to-end path works.
-6. Only after MVP may Phase 6 onward proceed; Phases 6-14 are post-MVP and Phase 15 SharePoint remains deliberately late.
+6. Only after the MVP may the remaining post-MVP phases proceed: Phase 11 evaluations, Phase 12 observability and Phase 13 CI/CD. Phases 6, 7, 8, 10, 14 and 15 are retired and are no longer part of the sequence.
 
 Foundry IQ remains the MVP retrieval intelligence layer. Custom retrieval orchestration, ranking, chunking, query routing, or citation assembly is out of scope unless a verified gap is documented and an ADR is accepted.
 
@@ -75,3 +73,18 @@ Two narrow exceptions were explicitly authorized by the project owner before tha
 
 - **Grounding probes** — the four adversarial probes became a repeatable fixture (`tests/fixtures/grounding-probes.yaml`). No scoring and no metrics, so Phase 11 stays unstarted.
 - **Agent tracing** — a Log Analytics workspace, an Application Insights resource and the connection that links them to the Foundry project. Agent runs are readable in the Foundry portal as spans. No metrics, logs, correlation, alerting or redaction, so Phase 12 stays unstarted.
+
+### Second roadmap trimming (2026-09-20)
+
+The project owner cut the remaining roadmap for the last time. Phases 11, 12 and 13 are the only phases that remain; Phases 6, 10, 14 and 15 were retired here, alongside Phases 7 and 8 which were retired earlier the same day. The reason is consistent: this is a portfolio-scale RAG demonstration, and each retired phase is either expensive, addresses a concern that only matters at a scale this project does not have, or duplicates work Foundry IQ already owns.
+
+- **Phase 6, retrieval optimization — retired.** Foundry IQ owns retrieval, and the only real knob is a knowledge-base setting rather than code. Without a measurement harness an optimization cannot be shown to be an improvement, and that harness is Phase 11.
+- **Phase 10, prompt-injection defenses — retired.** The guardrail covers direct injection, and the indirect path is bounded by the agent having one read-only tool. The platform control for retrieved content is not verifiable through this retrieval path.
+- **Phase 14, advanced infrastructure hardening — retired.** It is operational maturity for real load — retries, backpressure, capacity and recovery — none of which this project has.
+- **Phase 15, SharePoint — retired.** There is no demand for a second knowledge source, and it was the most expensive remaining item.
+- **Phases 7 and 8 — already retired.** Recorded in the Phase 9 scope decisions above and unchanged here.
+
+Two items were carried forward rather than dropped with their phases, and both now live in Phase 11:
+
+- **The Phase 6 retrieval experiment.** Compare the retrieval reasoning effort against the grounding probes and keep the cheapest setting that still passes.
+- **The Phase 10 injection threat.** A poisoned document must not change an answer, so it is recorded as a Phase 11 evaluation criterion.
