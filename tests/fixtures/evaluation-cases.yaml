@@ -1,0 +1,144 @@
+# Deterministic evaluation cases for the enterprise knowledge agent.
+#
+# Unlike the adversarial probes in grounding-probes.yaml, these are factual
+# cases. Every expected value and every expected document path is copied
+# verbatim from a file under enterprise-knowledge/, so the checks in
+# tests/eval_checks.py can verify the answer and its citations against the
+# local, version-controlled corpus without a model judge. Tier 2 (an LLM judge)
+# is deliberately out of scope.
+#
+# A `source_supports_claim` value must appear in one of the cited documents; a
+# `cites_document` path must be container-relative and present in the corpus. If
+# a document changes, this fixture has to change with it: a wrong expected value
+# here is worse than no case at all.
+#
+# Run with:
+#     uv run python tests/run_evaluations.py
+#
+# Each check kind is documented in tests/eval_checks.py.
+
+cases:
+  - id: payment-pool-size
+    question: "What is the PostgreSQL connection pool size for payment-service?"
+    why: "Protects payment-service's documented pool of 50 per pod against drift onto another service or a wrong number."
+    checks:
+      - kind: answer_contains
+        values: ["50"]
+      - kind: cites_document
+        paths: ["architecture/payment-service.md"]
+      - kind: source_supports_claim
+        values: ["opens a pool of 50 connections"]
+      - kind: citations_resolve
+      - kind: markers_match_spans
+
+  - id: checkout-payment-call
+    question: "How does checkout-api call payment-service, and what timeout applies to that call?"
+    why: "Protects the synchronous, 2 second, no-circuit-breaker edge that both service documents describe, and requires the answer to cite both."
+    checks:
+      - kind: answer_contains
+        values: ["synchronous"]
+      - kind: cites_document
+        paths: ["architecture/checkout-service.md", "architecture/payment-service.md"]
+      - kind: source_supports_claim
+        values: ["2 second timeout"]
+      - kind: citations_resolve
+      - kind: markers_match_spans
+
+  - id: incident-001-duration
+    question: "How long did INC-2026-001 last, and what triggered it?"
+    why: "Protects a concrete detail of a named incident against a fabricated or conflated timeline."
+    checks:
+      - kind: answer_contains
+        values: ["18 minutes"]
+      - kind: cites_document
+        paths: ["incidents/INC-2026-001.md"]
+      - kind: source_supports_claim
+        values: ["18 minutes"]
+      - kind: citations_resolve
+
+  - id: incident-003-cpu
+    question: "What CPU level did payment-service reach during INC-2026-003?"
+    why: "Protects the recorded CPU saturation figure for a named incident against a plausible but wrong number."
+    checks:
+      - kind: answer_contains
+        values: ["95%"]
+      - kind: cites_document
+        paths: ["incidents/INC-2026-003.md"]
+      - kind: source_supports_claim
+        values: ["95%"]
+      - kind: citations_resolve
+
+  - id: runbook-pool-threshold
+    question: "At what PgBouncer pool utilisation, sustained for how long, does the database latency runbook page the on-call engineer?"
+    why: "Protects the runbook's alert threshold, the number an on-call engineer acts on."
+    checks:
+      - kind: answer_contains
+        values: ["80%", "5 minutes"]
+      - kind: cites_document
+        paths: ["runbooks/database-latency.md"]
+      - kind: source_supports_claim
+        values: ["above 80% for 5 minutes"]
+      - kind: citations_resolve
+      - kind: markers_match_spans
+
+  - id: runbook-index-command
+    question: "Which index does the database latency runbook create on the settlements table?"
+    why: "Protects the exact DDL identifier the remediation step depends on."
+    checks:
+      - kind: answer_contains
+        values: ["idx_settlements_date_status"]
+      - kind: cites_document
+        paths: ["runbooks/database-latency.md"]
+      - kind: source_supports_claim
+        values: ["idx_settlements_date_status"]
+      - kind: citations_resolve
+
+  - id: secrets-store-and-access
+    question: "Where does Aurora Commerce store its application secrets, and how do workloads read them?"
+    why: "Protects the security policy that secrets live in Key Vault and are read by managed identity, never from code or manifests."
+    checks:
+      - kind: answer_contains
+        values: ["kv-aurora-prod", "managed identity"]
+      - kind: cites_document
+        paths: ["security/secrets-management.md"]
+      - kind: source_supports_claim
+        values: ["kv-aurora-prod", "managed identity"]
+      - kind: citations_resolve
+      - kind: markers_match_spans
+
+  - id: secrets-rotation-interval
+    question: "What is the rotation interval for the NorthPay API credential?"
+    why: "Protects the documented rotation interval for the credential payment-service holds."
+    checks:
+      - kind: answer_contains
+        values: ["90 days"]
+      - kind: cites_document
+        paths: ["security/secrets-management.md"]
+      - kind: source_supports_claim
+        values: ["90 days"]
+      - kind: citations_resolve
+
+  - id: rollback-reference-version
+    question: "Which payment-service version is the rollback reference target for INC-2026-002?"
+    why: "Protects the known-good version a rollback restores, which must never be confused with the bad release v2.31.0."
+    checks:
+      - kind: answer_contains
+        values: ["v2.30.4"]
+      - kind: cites_document
+        paths: ["engineering/rollback-procedure.md"]
+      - kind: source_supports_claim
+        values: ["v2.30.4"]
+      - kind: citations_resolve
+
+  - id: deployment-canary-traffic
+    question: "What share of traffic goes to a canary deployment, and for how long?"
+    why: "Protects the canary rollout percentage and timing the deployment guidelines require."
+    checks:
+      - kind: answer_contains
+        values: ["5%", "10 minutes"]
+      - kind: cites_document
+        paths: ["engineering/deployment-guidelines.md"]
+      - kind: source_supports_claim
+        values: ["5% of traffic to the canary for 10 minutes"]
+      - kind: citations_resolve
+      - kind: markers_match_spans

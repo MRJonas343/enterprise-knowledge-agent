@@ -11,7 +11,7 @@
 # Run with:
 #     uv run python tests/run_probes.py
 #
-# Each check kind is documented in tests/run_probes.py.
+# Each check kind is documented in tests/eval_checks.py.
 
 probes:
   - id: fabricated-incident
